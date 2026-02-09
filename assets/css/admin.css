@@ -1,0 +1,64 @@
+/*admin.css*/
+@import 'global.css';
+
+.sticky-header {
+    position: sticky; top: 0; z-index: 1020; background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.navbar-custom { background-color: var(--q-blue) !important; padding-bottom: 0.5rem; z-index: 1021; }
+.admin-tabs-bar { background: white; border-bottom: 1px solid #f0f0f0; padding: 0.75rem 1rem; }
+
+.nav-pills .nav-link {
+    color: #6c757d; font-weight: 600; margin-right: 0.5rem; border-radius: 50rem;
+    padding: 0.5rem 1.25rem; transition: all 0.2s ease; font-size: 0.95rem;
+    display: flex; align-items: center; gap: 8px;
+}
+.nav-pills .nav-link:hover { background-color: #f8f9fa; color: var(--q-blue); }
+.nav-pills .nav-link.active { background-color: var(--q-blue); color: white; box-shadow: 0 2px 4px rgba(0, 56, 168, 0.25); }
+
+@media (max-width: 768px) {
+    .admin-tabs-bar { padding: 0; border: none; height: 0; }
+
+    .nav-pills {
+        position: fixed; bottom: 0; left: 0; width: 100%;
+        background: #ffffff; z-index: 1040;
+        display: flex; justify-content: space-around;
+        padding: 8px 0 20px 0; /* Adjusted padding */
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        border-top: 1px solid #f0f0f0; margin: 0;
+    }
+
+    .nav-pills .nav-item { flex: 1; text-align: center; }
+
+    .nav-pills .nav-link {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: transparent !important;
+        color: #adb5bd; border-radius: 0;
+        padding: 0; margin: 0;
+        font-size: 0.7rem; gap: 4px;
+        box-shadow: none !important;
+        width: 100%;
+    }
+
+    .nav-pills .nav-link i { font-size: 1.5rem; margin-bottom: 0; display: block; line-height: 1; }
+    .nav-pills .nav-link.active { color: var(--q-blue) !important; background: transparent !important; }
+
+    body { padding-bottom: 90px; }
+    .mobile-hide { display: none; }
+    .btn-group-responsive { display: grid; gap: 0.5rem; width: 100%; }
+    .btn-group-responsive .btn { border-radius: 0.5rem !important; margin-bottom: 0; }
+}
+
+@media (min-width: 769px) {
+    .admin-container-width { max-width: 1200px; margin: 0 auto; }
+    .btn-group-responsive { display: inline-flex; gap: 10px; }
+}
+
+.stat-card { border-left: 4px solid transparent; transition: transform 0.2s; background: var(--bg-surface); }
+.stat-card:hover { transform: translateY(-3px); }
+.stat-card.waiting { border-left-color: var(--q-yellow); }
+.stat-card.processed { border-left-color: #198754; }
+.stat-card.noshow { border-left-color: #dc3545; }
+.stat-card.total { border-left-color: var(--q-blue); }

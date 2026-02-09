@@ -1,0 +1,84 @@
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+:root {
+    --q-blue: #0038A8;
+    --q-blue-hover: #002a80;
+    --q-red: #CE1126;
+    --q-yellow: #f6d112;
+    --bg-body: #f4f7f6;
+    --bg-surface: #ffffff;
+    --border-dashed: #e0e0e0;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-body);
+    margin: 0;
+    color: #212529;
+    -webkit-font-smoothing: antialiased;
+}
+
+.text-primary-q { color: var(--q-blue) !important; }
+.text-danger-q { color: var(--q-red) !important; }
+.bg-q-blue { background-color: var(--q-blue) !important; }
+.d-none { display: none !important; }
+.ls-2 { letter-spacing: 2px; }
+
+.responsive-container {
+    width: 100%;
+    margin: 0 auto;
+}
+@media (min-width: 768px) {
+    .responsive-container { max-width: 500px; }
+}
+
+.btn-primary-q {
+    background-color: var(--q-blue);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.btn-primary-q:hover, .btn-primary-q:active {
+    background-color: var(--q-blue-hover);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.card {
+    background: var(--bg-surface);
+    border: 1px solid rgba(0,0,0,0.08);
+}
+.card-header-q {
+    height: 8px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--q-blue) 50%, var(--q-red) 50%);
+}
+
+.form-floating > .form-control:focus ~ label { color: var(--q-blue); }
+.form-control:focus {
+    border-color: var(--q-blue);
+    box-shadow: 0 0 0 0.25rem rgba(0, 56, 168, 0.15);
+}
+
+.fade-in { animation: fadeIn 0.4s ease-in-out forwards; opacity: 0; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%, 75% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+}
+
+#global-dynamic-modal { z-index: 1090 !important; }
+#global-dynamic-modal + .modal-backdrop { z-index: 1080 !important; }
+#global-dynamic-modal .modal-content { border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+
+.modal-dimmed .modal-content { position: relative; overflow: hidden; transition: transform 0.3s ease; }
+.modal-dimmed .modal-content::after {
+    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); z-index: 999; pointer-events: auto; opacity: 0;
+    animation: overlayFadeIn 0.3s forwards;
+}
+@keyframes overlayFadeIn { to { opacity: 1; } }

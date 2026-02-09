@@ -1,0 +1,128 @@
+<!--citizen-dashboard-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>OneQueue - Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../assets/css/c-dashboard.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="bg-light">
+
+<nav class="navbar text-white shadow-sm sticky-top">
+  <div class="container-fluid d-flex justify-content-between align-items-center">
+    <span class="navbar-brand mb-0 h1 fw-bold text-white"><i class="bi bi-building-fill me-2"></i>OneQueue PH</span>
+    <button id="logoutBtn" class="btn btn-sm btn-outline-light border-0"><i class="bi bi-box-arrow-right fs-5"></i></button>
+  </div>
+</nav>
+
+<div id="mainLoader" class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="text-center">
+    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+    <p class="text-muted mt-3 small ls-2">Loading Profile...</p>
+  </div>
+</div>
+
+<div id="mainContent" class="container dashboard-container responsive-container py-4 d-none">
+
+  <div class="card profile-card shadow-sm border-0 rounded-4 mb-4 fade-in">
+    <div class="card-body p-4 d-flex align-items-center">
+      <div class="flex-grow-1">
+        <h5 class="fw-bold mb-0 text-dark" id="DName">...</h5>
+        <small class="text-muted d-block" id="DMobile">...</small>
+        <span id="priorityBadge" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle mt-2">LOADING</span>
+      </div>
+      <button class="btn btn-sm btn-link text-primary-q" id="editProfileBtn"><i class="bi bi-pencil-square fs-3"></i></button>
+    </div>
+  </div>
+
+  <div class="mb-5 fade-in">
+    <h6 class="text-muted text-uppercase fw-bold mb-3 small ls-2 ps-1">New Transaction</h6>
+    <button onclick="startScan()" class="btn btn-action-card w-100 py-4 shadow-sm rounded-4 text-start">
+      <div class="d-flex align-items-center p-2">
+        <div class="me-4 text-center"><i class="bi bi-qr-code-scan text-danger-q display-4"></i></div>
+        <div><h4 class="fw-bold text-dark mb-1">Join Queue</h4><p class="text-muted small mb-0 lh-sm">Scan the kiosk QR code</p></div>
+        <div class="ms-auto text-muted"><i class="bi bi-chevron-right"></i></div>
+      </div>
+    </button>
+  </div>
+
+  <div class="flex-grow-1 fade-in">
+    <h6 class="text-muted text-uppercase fw-bold mb-3 small ls-2 ps-1">Recent Activity</h6>
+    <div class="d-flex flex-column gap-3" id="historyList"></div>
+    <div id="emptyHistory" class="text-center py-5 d-none">
+      <i class="bi bi-journal-x text-muted fs-1 mb-2"></i>
+      <p class="text-muted small">No recent transactions.</p>
+    </div>
+  </div>
+
+  <div class="text-center mt-5 mb-3"><small class="text-muted opacity-50">OneQueue v1.0.5</small></div>
+</div>
+
+<div class="modal fade" id="setupProfileModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-primary-q" id="profileModalTitle">Update Profile</h5>
+        <button type="button" class="btn-close" id="profileModalCloseBtn" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="profileForm">
+          <div class="form-floating mb-3">
+            <label for="inputName"></label><input type="text" class="form-control" id="inputName" required placeholder="Full Name">
+            <label>Full Name</label>
+          </div>
+
+          <div class="form-floating mb-3">
+            <label for="inputMobile"></label><input type="tel" class="form-control" id="inputMobile" placeholder="09" pattern="[0-9]{11}" maxlength="11" required>
+            <label>Mobile Number (09...)</label>
+          </div>
+
+          <div class="form-floating mb-3">
+            <label for="inputBirthday"></label><input type="date" class="form-control" id="inputBirthday" required>
+            <label>Date of Birth</label>
+          </div>
+
+          <label class="fw-bold text-primary-q small mb-1">Biological Sex</label>
+          <div class="row g-2 mb-3">
+            <div class="col-6"><input type="radio" class="btn-check" name="sex" id="sexMale" value="male" checked><label class="btn btn-outline-secondary w-100" for="sexMale">Male</label></div>
+            <div class="col-6"><input type="radio" class="btn-check" name="sex" id="sexFemale" value="female"><label class="btn btn-outline-secondary w-100" for="sexFemale">Female</label></div>
+          </div>
+
+          <label class="fw-bold text-primary-q small mb-1">Priority Status</label>
+          <div class="d-flex gap-2 mb-4">
+            <div class="flex-fill"><input type="checkbox" class="btn-check" id="CPriority"><label class="btn btn-outline-secondary w-100" for="CPriority">PWD / Senior</label></div>
+            <div id="pregnancyOption" class="flex-fill d-none"><input type="checkbox" class="btn-check" id="checkPregnant"><label class="btn btn-outline-secondary w-100" for="checkPregnant">Pregnant</label></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary-q w-100 py-3 fw-bold shadow-sm rounded-3">SAVE PROFILE</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="scanModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 bg-dark overflow-hidden">
+      <div class="modal-header border-0">
+        <h5 class="modal-title text-white">Scan QR</h5>
+        <button type="button" class="btn-close btn-close-white" onclick="stopScan()" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0 position-relative">
+        <div id="reader" style="width:100%; height:300px;"></div>
+        <div class="position-absolute bottom-0 start-0 w-100 text-center pb-3 pointer-events-none">
+          <small class="text-white-50">Point camera at QR</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<script type="module" src="../assets/js/c-dashboard.js"></script>
+</body>
+</html>

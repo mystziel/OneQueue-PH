@@ -1,0 +1,51 @@
+<!--ticket.html-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OneQueue - Active Ticket</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="../assets/css/index.css">
+</head>
+<body class="bg-white">
+
+<div class="container d-flex justify-content-center py-5">
+  <div class="w-100" style="max-width: 450px;">
+
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden fade-in">
+      <div class="card-header-q" style="height: 12px;"></div>
+
+      <div class="card-body text-center p-5">
+        <div class="mb-4">
+          <span class="badge bg-danger px-3 py-2 rounded-pill" id="ticketType">---- LANE</span>
+        </div>
+
+        <p class="text-muted text-uppercase small ls-2 mb-1">Your Ticket Number</p>
+        <h1 style="font-size: 5rem;" class="display-1 fw-bold text-dark mb-0" id="ticketNum">--</h1>
+
+        <hr class="dashed-line my-5">
+
+        <div class="alert alert-warning border-0 py-3 rounded-3">
+          <div class="small fw-bold text-dark">STATUS</div>
+          <div class="h5 mb-0" id="queueStatus">Loading position...</div>
+        </div>
+
+        <p class="text-muted small mt-4">Please wait for your number to be called on the main monitor.</p>
+        <p class="text-muted small mt-4">Kindly check your phone message to get notified.</p>
+      </div>
+
+      <div class="card-footer bg-light border-0 p-4">
+        <button onclick="confirmCancel()" class="btn btn-link text-danger w-100 text-decoration-none fw-bold">
+          Cancel Ticket & Leave Queue
+        </button>
+      </div>
+    </div>
+
+    <p class="text-center text-muted mt-4 small">Do not close this page to keep your spot.</p>
+  </div>
+</div>
+
+<script type="module" src="../assets/js/ticket.js"></script>
+</body>
+</html>

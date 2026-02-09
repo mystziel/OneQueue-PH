@@ -1,0 +1,32 @@
+{
+  "name": "onequeue-ph",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mystziel/OneQueue-PH.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mystziel/OneQueue-PH/issues"
+  },
+  "homepage": "https://github.com/mystziel/OneQueue-PH#readme",
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
+    "firebase": "^12.9.0"
+  },
+  "devDependencies": {
+    "vite": "^7.3.1"
+  }
+}
