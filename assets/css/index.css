@@ -1,11 +1,8 @@
-@import 'global.css';
-
 html, body {
     height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
-    /* RESTORED: Locks the screen (Unscrollable) */
     overflow: hidden;
     position: fixed;
     background-color: #F0F4F8;
