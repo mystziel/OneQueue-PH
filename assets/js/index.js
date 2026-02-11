@@ -4,7 +4,7 @@ import { UIService } from './ui-service.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. Initialization & Splash Screen ---
+    //Splash Screen
     const splash = document.getElementById('splash-screen');
 
     AuthService.observeAuth(async (user) => {
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     });
 
-    // --- 2. View Switching Logic ---
+    //View Switching
     const views = {
         login: document.getElementById('login-view'),
         register: document.getElementById('register-view'),
@@ -29,31 +29,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const switchView = (viewName) => {
-        // Hide all
         Object.values(views).forEach(el => {
             if(el) {
                 el.classList.add('d-none');
-                el.classList.remove('fade-in'); // Reset animation
+                el.classList.remove('fade-in');
             }
         });
 
-        // Show target
         const target = views[viewName];
         if (target) {
             target.classList.remove('d-none');
-            // Small delay to re-trigger CSS animation if needed
             setTimeout(() => target.classList.add('fade-in'), 10);
         }
     };
 
-    // Bind Navigation Buttons
+    //Navigation Buttons
     document.getElementById('btnGoToRegister')?.addEventListener('click', () => switchView('register'));
     document.getElementById('btnGoToForgot')?.addEventListener('click', () => switchView('forgot'));
     document.getElementById('btnBackToLoginReg')?.addEventListener('click', () => switchView('login'));
     document.getElementById('btnBackToLoginForgot')?.addEventListener('click', () => switchView('login'));
-
-
-    // --- 3. Logic Handlers ---
 
     // LOGIN
     const loginForm = document.getElementById('loginForm');
@@ -143,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Helpers ---
+    //Helpers
     function setLoading(btn, isLoading, text) {
         if (isLoading) {
             btn.disabled = true;
@@ -185,9 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'auth/too-many-requests':
                 msg = "Too many failed attempts. Please try again later.";
-                break;
-            case 'auth/email-not-verified':
-                msg = result.message;
                 break;
             default:
                 msg = result.message || msg;

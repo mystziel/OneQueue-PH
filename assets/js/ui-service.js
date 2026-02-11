@@ -1,4 +1,5 @@
-// ui-service.js
+// assets/js/ui-service.js
+
 import { Modal } from 'bootstrap';
 
 export const UIService = {
@@ -7,7 +8,6 @@ export const UIService = {
         let btnClass = 'btn-primary-q';
         let headerColor = 'text-dark';
 
-        // Map types to visual styles
         if (type === 'success') {
             btnClass = 'btn-success';
             headerColor = 'text-success';
@@ -16,7 +16,6 @@ export const UIService = {
             headerColor = 'text-danger';
         }
 
-        // Generate a unique ID to prevent collisions
         const modalId = 'global-dynamic-modal';
         const existingEl = document.getElementById(modalId);
         if (existingEl) existingEl.remove();
@@ -36,20 +35,14 @@ export const UIService = {
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-        // 1. Get the element
         const modalEl = document.getElementById(modalId);
-
         if (modalEl) {
-            // 2. Instantiate using the imported Class (No window.bootstrap needed)
             const bsModal = new Modal(modalEl);
-
-            // 3. Cleanup logic
             modalEl.addEventListener('hidden.bs.modal', () => {
                 if (onCloseCallback) onCloseCallback();
                 bsModal.dispose();
                 modalEl.remove();
             }, { once: true });
-
             bsModal.show();
         }
     },
@@ -83,15 +76,13 @@ export const UIService = {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
 
         const modalEl = document.getElementById(modalId);
-
         if (modalEl) {
-            // Instantiate using imported Class
             const bsModal = new Modal(modalEl);
             const yesBtn = document.getElementById(`${modalId}-yes`);
 
             if (yesBtn) {
                 yesBtn.onclick = () => {
-                    bsModal.hide(); // Hiding triggers the event listener below
+                    bsModal.hide();
                     if (onConfirm) onConfirm();
                 };
             }

@@ -1,25 +1,37 @@
 // assets/js/c-dashboard.js
+import { UIService } from './ui-service.js';
+import {AuthService} from "./auth";
 
-// Loading
 document.addEventListener("DOMContentLoaded", () => {
-    const mainLoader = document.getElementById("mainLoader");
-    const mainContent = document.getElementById("mainContent");
+
+    //Loading Screen
+    const loader = document.getElementById("mainLoader");
+    const content = document.getElementById("mainContent");
 
     setTimeout(() => {
-        hideLoader();
-    }, 2000);
+        loader.classList.add("d-none");
+        loader.classList.remove("d-flex");
+        content.classList.remove("d-none");
+    }, 1500);
 
-    function hideLoader() {
-        mainLoader.style.transition = "opacity 0.5s ease";
-        mainLoader.style.opacity = "0";
+    //Logout
+    const logoutBtn = document.getElementById("logoutBtn");
 
-        setTimeout(() => {
-            mainLoader.classList.add("d-none");
-            mainLoader.classList.remove("d-flex");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", (e) => {
+            e.preventDefault();
 
-            mainContent.classList.remove("d-none");
+            UIService.showConfirm(
+                "Log Out?",
+                "Are you sure you want to end your session?",
+                "Log Out",
+                async () => {
 
-            mainContent.classList.add("fade-in");
-        }, 500);
+                    await AuthService.logout();
+
+                    window.location.href = "../index.html";
+                }
+            );
+        });
     }
 });
