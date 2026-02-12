@@ -1,4 +1,3 @@
-<!--admin-dashboard-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
 </head>
 <body class="bg-body">
 
@@ -18,23 +18,42 @@
 </div>
 
 <div id="adminContent" class="d-none">
+
     <header class="sticky-header">
         <nav class="navbar navbar-dark navbar-custom px-4">
             <div class="container-fluid d-flex justify-content-between align-items-center">
-                <span class="navbar-brand fw-bold h1 fs-5 mb-0"><i class="bi bi-shield-lock-fill me-2"></i>OneQueue Admin</span>
-                <button id="logoutBtn" class="btn btn-sm btn-outline-light border-0"><span class="d-none d-md-inline me-1">Logout</span> <i class="bi bi-box-arrow-right"></i></button>
+                <span class="navbar-brand fw-bold h1 fs-5 mb-0">
+                    <i class="bi bi-shield-lock-fill me-2"></i>OneQueue Admin
+                </span>
+                <button id="logoutBtn" class="btn btn-sm btn-outline-light border-0">
+                    <span class="d-none d-md-inline me-1">Logout</span>
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
             </div>
         </nav>
-        <div class="admin-tabs-bar">
-            <div class="container-fluid px-0 px-md-4 admin-container-width">
-                <ul class="nav nav-pills" id="adminTabs" role="tablist">
-                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#overview"><i class="bi bi-grid-fill"></i> <span>Overview</span></button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tellers"><i class="bi bi-people-fill"></i> <span>Tellers</span></button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#override"><i class="bi bi-lightning-charge-fill"></i> <span>Override</span></button></li>
-                </ul>
-            </div>
-        </div>
     </header>
+
+    <div class="admin-tabs-bar">
+        <div class="container-fluid px-0 px-md-4 admin-container-width">
+            <ul class="nav nav-pills" id="adminTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#overview">
+                        <i class="bi bi-grid-fill"></i> <span>Overview</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tellers">
+                        <i class="bi bi-people-fill"></i> <span>Tellers</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#ticketHandling">
+                        <i class="bi bi-lightning-charge-fill"></i> <span>Ticket Handling</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
 
     <div class="container-fluid py-4 px-md-5 admin-container-width">
         <div class="tab-content" id="adminTabsContent">
@@ -44,22 +63,52 @@
                     <div class="col-lg-8">
                         <div class="card shadow-sm border-0 rounded-4 mb-4">
                             <div class="card-body p-4 d-md-flex justify-content-between align-items-center">
-                                <div class="mb-3 mb-md-0"><h5 class="fw-bold text-dark mb-1">Establishment Status</h5><p class="text-muted small mb-0">Control queue availability.</p></div>
+                                <div class="mb-3 mb-md-0">
+                                    <h5 class="fw-bold text-dark mb-1">Establishment Status</h5>
+                                    <p class="text-muted small mb-0">Control queue availability.</p>
+                                </div>
                                 <div class="btn-group-responsive" role="group">
-                                    <input type="radio" class="btn-check" name="status" id="btnOpen"><label class="btn btn-outline-success fw-bold px-4 rounded-3" for="btnOpen">OPEN</label>
-                                    <input type="radio" class="btn-check" name="status" id="btnBreak"><label class="btn btn-outline-warning fw-bold px-4 rounded-3" for="btnBreak">ON BREAK</label>
-                                    <input type="radio" class="btn-check" name="status" id="btnClose" checked><label class="btn btn-outline-danger fw-bold px-4 rounded-3" for="btnClose">CLOSED</label>
+                                    <input type="radio" class="btn-check" name="status" id="btnOpen">
+                                    <label class="btn btn-outline-success fw-bold px-4 rounded-3" for="btnOpen">OPEN</label>
+
+                                    <input type="radio" class="btn-check" name="status" id="btnBreak">
+                                    <label class="btn btn-outline-warning fw-bold px-4 rounded-3" for="btnBreak">ON BREAK</label>
+
+                                    <input type="radio" class="btn-check" name="status" id="btnClose" checked>
+                                    <label class="btn btn-outline-danger fw-bold px-4 rounded-3" for="btnClose">CLOSED</label>
                                 </div>
                             </div>
                         </div>
+
                         <h6 class="text-muted text-uppercase fw-bold small ls-2 mb-3">Live Metrics</h6>
-                        <div class="row g-3">
+                        <div class="row g-3 mb-4">
                             <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card waiting h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statWaiting">0</h2><small class="text-muted small">Waiting</small></div></div></div>
                             <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card processed h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statProcessed">0</h2><small class="text-muted small">Processed</small></div></div></div>
-                            <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card noshow h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statNoShow">0</h2><small class="text-muted small">No Show</small></div></div></div>
+                            <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card noshow h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statNoShow">0</h2><small class="text-muted small">Cancelled</small></div></div></div>
                             <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card total h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0 text-primary-q" id="statTotal">0</h2><small class="text-muted small">Total</small></div></div></div>
                         </div>
+
+                        <div class="card shadow-sm border-0 rounded-4">
+                            <div class="card-header bg-white fw-bold py-3 d-flex justify-content-between align-items-center">
+                                <span>Live Queue Activity</span>
+                                <span class="badge bg-light text-dark border">Active Tickets</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Ticket</th>
+                                        <th>Status</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="overviewQueueTable">
+                                    <tr><td colspan="4" class="text-center py-4 text-muted">No Active Ticket</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="col-lg-4">
                         <div class="card shadow-sm border-0 rounded-4 mb-3">
                             <div class="card-header bg-white fw-bold py-3">Queue Control</div>
@@ -68,12 +117,11 @@
                                 <div class="input-group"><label for="maxTicketInput"></label><input type="number" id="maxTicketInput" class="form-control" placeholder="Max Qty" disabled><button class="btn btn-primary-q" id="saveLimitBtn" disabled>Save</button></div>
                             </div>
                         </div>
-                        <div class="card shadow-sm border-0 rounded-4">
-                            <div class="card-header bg-white fw-bold py-3 d-flex justify-content-between align-items-center"><span>Online Tellers</span><span class="badge bg-success-subtle text-success rounded-pill" id="onlineCount">0</span></div>
-                            <ul class="list-group list-group-flush small" id="activeTellerList"><li class="list-group-item text-center py-3 text-muted">No active tellers.</li></ul>
-                        </div>
                     </div>
                 </div>
+                <footer class="text-center py-4 mt-2">
+                    <small class="text-muted opacity-50">OneQueue PH v1.0.0</small>
+                </footer>
             </div>
 
             <div class="tab-pane fade" id="tellers">
@@ -85,14 +133,10 @@
                                 <div class="card-body p-4">
                                     <form id="createTellerForm">
                                         <div class="row g-3">
-                                            <div class="col-md-6"><div class="form-floating"><label
-                                                    for="tellerName"></label><input type="text" id="tellerName" class="form-control" placeholder="Name" required><label>Full Name</label></div></div>
-                                            <div class="col-md-6"><div class="form-floating"><label
-                                                    for="tellerMobile"></label><input type="text" id="tellerMobile" class="form-control" placeholder="Mobile" required><label>Mobile (Login ID)</label></div></div>
-                                            <div class="col-md-6"><div class="form-floating"><label
-                                                    for="tellerCounter"></label><input type="text" id="tellerCounter" class="form-control" placeholder="Counter" required><label>Counter Name</label></div></div>
-                                            <div class="col-md-6"><div class="form-floating"><label
-                                                    for="tellerPass"></label><input type="password" id="tellerPass" class="form-control" placeholder="Password" required><label>Password</label></div></div>
+                                            <div class="col-md-6"><div class="form-floating"><input type="text" id="tellerName" class="form-control" placeholder="Name" required><label for="tellerName">Full Name</label></div></div>
+                                            <div class="col-md-6"><div class="form-floating"><input type="text" id="tellerEmail" class="form-control" placeholder="Email" required><label for="tellerEmail">Email Address</label></div></div>
+                                            <div class="col-md-6"><div class="form-floating"><input type="text" id="tellerCounter" class="form-control" placeholder="Counter" required><label for="tellerCounter">Counter Name</label></div></div>
+                                            <div class="col-md-6"><div class="form-floating"><input type="password" id="tellerPass" class="form-control" placeholder="Password" required><label for="tellerPass">Password</label></div></div>
                                             <div class="col-12 mt-2"><button type="submit" class="btn btn-primary-q w-100 fw-bold py-2">Create Account</button></div>
                                         </div>
                                     </form>
@@ -103,37 +147,73 @@
                             <div class="card-header bg-white fw-bold py-3">Existing Accounts</div>
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light"><tr><th class="ps-4">Name</th><th>Counter</th><th class="mobile-hide">Mobile</th><th class="text-end pe-4">Actions</th></tr></thead>
-                                    <tbody id="allTellersTable"><tr><td colspan="4" class="text-center py-4 text-muted">Loading list...</td></tr></tbody>
+                                    <thead class="bg-light"><tr><th class="ps-4">Name</th><th>Counter</th><th class="mobile-hide">Email</th><th class="text-end pe-4">Actions</th></tr></thead>
+                                    <tbody id="allTellersTable"><tr><td colspan="4" class="text-center py-4 text-muted">No Tellers</td></tr></tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
                 </div>
+                <footer class="text-center py-4 mt-2">
+                    <small class="text-muted opacity-50">OneQueue v1.0.0</small>
+                </footer>
             </div>
 
-            <div class="tab-pane fade" id="override">
-                <div class="row justify-content-center">
-                    <div class="col-md-6 col-lg-5">
-                        <div class="card shadow-lg border-0 rounded-4 mt-4">
-                            <div class="card-body p-5 text-center">
-                                <div class="mb-4"><div class="bg-danger-subtle d-inline-block p-4 rounded-circle text-danger"><i class="bi bi-exclamation-triangle-fill display-4"></i></div></div>
+            <div class="tab-pane fade" id="ticketHandling">
+                <div class="row justify-content-center g-4">
+
+                    <div class="col-lg-6 col-md-8 col-12">
+                        <div class="card shadow-sm border-0 rounded-4 mt-2 h-100">
+                            <div class="card-body p-4 p-md-5 text-center">
+                                <div class="icon-circle-responsive bg-warning-subtle text-warning mb-3">
+                                    <i class="bi bi-star-fill"></i>
+                                </div>
+
                                 <h4 class="fw-bold text-dark">Priority Override</h4>
-                                <p class="text-muted mb-4">Search for a regular ticket to upgrade its status.</p>
-                                <div class="input-group input-group-lg mb-3 shadow-sm rounded-3"><label
-                                        for="searchTicket"></label><input type="text" id="searchTicket" class="form-control border-0 bg-light" placeholder="Ticket # (e.g. R-105)"><button class="btn btn-dark px-4" id="findTicketBtn">Find</button></div>
+                                <p class="text-muted mb-4 small">Search for a regular ticket to upgrade its status.</p>
+
+                                <div class="input-group mb-3 shadow-sm rounded-3">
+                                    <label for="searchTicket"></label><input type="text" id="searchTicket" class="form-control border-0 bg-light" placeholder="Ticket # (e.g. R-105)">
+                                    <button class="btn btn-dark px-4" id="findTicketBtn">Find</button>
+                                </div>
+
                                 <div id="ticketResult" class="d-none mt-4 fade-in">
                                     <div class="card border border-warning-subtle bg-warning-subtle rounded-3 p-3">
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <div class="text-start"><small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Found Ticket</small><div class="h3 fw-bold mb-0 text-dark" id="resNum">--</div><small id="resOwner" class="text-dark-50">--</small></div>
-                                            <button class="btn btn-danger fw-bold shadow-sm rounded-pill px-4" id="upgradeBtn">UPGRADE</button>
+                                            <div class="text-start">
+                                                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem;">Found Ticket</small>
+                                                <div class="h4 fw-bold mb-0 text-dark" id="resNum">--</div>
+                                                <small id="resOwner" class="text-dark-50" style="font-size: 0.75rem;">--</small>
+                                            </div>
+                                            <button class="btn btn-danger btn-sm fw-bold shadow-sm rounded-pill px-3" id="upgradeBtn">UPGRADE</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-lg-6 col-md-8 col-12">
+                        <div class="card shadow-sm border-0 rounded-4 mt-2 h-100">
+                            <div class="card-body p-4 p-md-5 text-center">
+                                <div class="icon-circle-responsive bg-danger-subtle text-danger mb-3">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </div>
+
+                                <h4 class="fw-bold text-dark">System Reset</h4>
+                                <p class="text-muted mb-4 small">Clear all tickets for the new day. <br><span class="text-danger fw-bold">Warning: This cannot be undone.</span></p>
+
+                                <button class="btn btn-outline-danger w-100 fw-bold py-2" onclick="resetQueueSystem()">
+                                    DELETE ALL TICKETS
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+                <footer class="text-center py-4 mt-2">
+                    <small class="text-muted opacity-50">OneQueue v1.0.0</small>
+                </footer>
             </div>
 
         </div>
@@ -150,10 +230,10 @@
             <div class="modal-body p-4">
                 <form id="editTellerForm">
                     <input type="hidden" id="editTellerId">
-                    <div class="form-floating mb-3"><label for="editName"></label><input type="text" class="form-control" id="editName" placeholder="Name"><label>Full Name</label></div>
+                    <div class="form-floating mb-3"><input type="text" class="form-control" id="editName" placeholder="Name"><label for="editName">Full Name</label></div>
                     <div class="row g-2 mb-3">
-                        <div class="col-6"><div class="form-floating"><label for="editCounter"></label><input type="text" class="form-control" id="editCounter" placeholder="Counter"><label>Counter Name</label></div></div>
-                        <div class="col-6"><div class="form-floating"><label for="editMobile"></label><input type="text" class="form-control" id="editMobile" placeholder="Mobile" disabled><label>Mobile ID</label></div></div>
+                        <div class="col-6"><div class="form-floating"><input type="text" class="form-control" id="editCounter" placeholder="Counter"><label for="editCounter">Counter Name</label></div></div>
+                        <div class="col-6"><div class="form-floating"><input type="text" class="form-control" id="editEmail" placeholder="Email" disabled><label for="editEmail">Email</label></div></div>
                     </div>
                     <div class="alert alert-light border border-dashed rounded-3 p-3 mb-3">
                         <div class="mb-2"><label class="fw-bold text-danger small"><i class="bi bi-key-fill me-2"></i>Reset Password</label></div>

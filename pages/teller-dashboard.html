@@ -1,108 +1,174 @@
-<!--teller-dashboard.html-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Teller - OneQueue PH</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
     <link rel="stylesheet" href="../assets/css/teller.css">
 </head>
-<body class="bg-light">
+<body class="bg-body">
 
-<div id="tellerLoader" class="d-flex flex-column justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100 bg-white" style="z-index: 9999;">
-    <div class="spinner-border text-primary-q mb-3" style="width: 3rem; height: 3rem;"></div>
-    <h5 class="fw-bold text-dark">Loading Counter...</h5>
+<div id="tellerLoader" class="d-flex flex-column justify-content-center align-items-center" style="height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; background: #fff; z-index: 9999;">
+    <div class="spinner-border text-primary-q mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+    <h5 class="fw-bold text-dark">Initializing Counter...</h5>
+    <p class="text-muted small">Connecting to OneQueue Server.</p>
 </div>
 
 <div id="tellerContent" class="d-none">
 
-    <nav class="navbar navbar-dark bg-q-blue shadow-sm sticky-top">
-        <div class="container-fluid px-3">
-            <div class="d-flex align-items-center gap-3">
-                <span class="navbar-brand fw-bold mb-0 h1 fs-5">OneQueue TELLER</span>
-                <div class="vr text-white opacity-50"></div>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-                <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
-                    <input class="form-check-input pointer" type="checkbox" id="breakToggle">
-                    <label class="form-check-label text-white small fw-bold" for="breakToggle">ON BREAK</label>
-                </div>
-                <button id="logoutBtn" class="btn btn-sm btn-outline-light border-0"><i class="bi bi-box-arrow-right fs-5"></i></button>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container-fluid py-3 px-md-4 responsive-container">
-        <div class="card shadow-sm border-0 rounded-4 mb-3 overflow-hidden text-center main-card">
-            <div id="idlePanel" class="card-body py-5 fade-in">
-                <div class="opacity-25 mb-3"><i class="bi bi-megaphone-fill display-1"></i></div>
-                <h3 class="fw-bold text-dark">Ready to Serve</h3>
-                <p class="text-muted small mb-4">Queue is active. Call the next citizen.</p>
-                <button id="btnCallNext" class="btn btn-primary-q btn-lg rounded-pill px-5 py-3 fw-bold shadow-sm scale-hover">
-                    CALL NEXT
-                </button>
-            </div>
-
-            <div id="servingPanel" class="card-body p-4 d-none">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="badge bg-success-subtle text-success fw-bold px-3 rounded-pill">SERVING</span>
-                    <small class="text-muted border px-2 rounded"><i class="bi bi-stopwatch me-1"></i><span id="serveTimer">00:00</span></small>
+    <header class="sticky-header">
+        <nav class="navbar navbar-dark navbar-custom px-4">
+            <div class="container-fluid d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="navbar-brand fw-bold h1 fs-5 mb-0">
+                        <i class="bi bi-person-workspace me-2"></i>OneQueue Teller
+                    </span>
+                    <span class="badge bg-white text-primary-q rounded-pill px-3 py-2 fw-bold shadow-sm d-none d-md-inline-block">
+                        <i class="bi bi-display me-1"></i> <span id="displayCounterName">Counter --</span>
+                    </span>
                 </div>
 
-                <div class="py-4">
-                    <h1 class="display-1 fw-bold text-dark mb-0 tracking-wide" id="currentTicketNum">--</h1>
-                    <p class="text-muted fs-5 mb-0" id="currentOwner">Ticket #</p>
-                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="form-check form-switch mb-0 d-flex align-items-center bg-white bg-opacity-10 rounded-pill px-3 py-1 border border-white border-opacity-25">
+                        <input class="form-check-input pointer me-2" type="checkbox" id="breakToggle">
+                        <label class="form-check-label text-white small fw-bold" for="breakToggle" style="font-size: 0.8rem; letter-spacing: 0.5px;">ON BREAK</label>
+                    </div>
 
-                <div class="row g-2 mt-3">
-                    <div class="col-4">
-                        <button class="btn btn-outline-danger w-100 py-3 fw-bold rounded-3 h-100 d-flex flex-column align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                            <i class="bi bi-x-circle-fill mb-1 fs-5"></i>
-                            CANCEL
+                    <button id="logoutBtn" class="btn btn-sm btn-outline-light border-0">
+                        <span class="d-none d-md-inline me-1">Logout</span>
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container-fluid py-4 px-md-5 admin-container-width">
+        <div class="row g-4">
+
+            <div class="col-lg-8">
+
+                <div id="idlePanel" class="card shadow-sm border-0 rounded-4 h-100 text-center fade-in">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center py-5">
+                        <div class="bg-primary-subtle text-primary-q rounded-circle d-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px;">
+                            <i class="bi bi-megaphone-fill fs-1"></i>
+                        </div>
+                        <h2 class="fw-bold text-dark">Ready to Serve</h2>
+                        <p class="text-muted mb-4">Make sure your counter is clear before calling the next person.</p>
+
+                        <button id="btnCallNext" class="btn btn-primary-q btn-lg rounded-pill px-5 py-3 fw-bold shadow-lg scale-hover">
+                            <i class="bi bi-bell-fill me-2"></i>CALL NEXT TICKET
                         </button>
                     </div>
-                    <div class="col-8">
-                        <button class="btn btn-primary-q w-100 py-3 fw-bold rounded-3 h-100 shadow-sm d-flex flex-column align-items-center justify-content-center scale-hover" data-bs-toggle="modal" data-bs-target="#confirmModal">
-                            <i class="bi bi-check-circle-fill mb-1 fs-4"></i>
-                            CONFIRM
-                        </button>
+                    <div class="card-footer bg-white border-0 py-3">
+                        <small class="text-muted"><i class="bi bi-info-circle me-1"></i> Pressing call will trigger the lobby announcement.</small>
                     </div>
                 </div>
+
+                <div id="servingPanel" class="card shadow-sm border-0 rounded-4 h-100 d-none">
+                    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="badge bg-success-subtle text-success fw-bold px-3 py-2 rounded-pill mb-2">
+                                <i class="bi bi-circle-fill small me-2"></i>NOW SERVING
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small fw-bold text-uppercase ls-1">Session Timer</div>
+                            <div class="h4 fw-bold text-dark font-monospace mb-0" id="serveTimer">00:00</div>
+                        </div>
+                    </div>
+
+                    <div class="card-body px-4 py-2 text-center d-flex flex-column justify-content-center">
+                        <div class="py-3">
+                            <h6 class="text-muted text-uppercase fw-bold ls-2 mb-0">Ticket Number</h6>
+                            <h1 class="display-1 fw-bold text-dark mb-0 tracking-wide" id="currentTicketNum" style="font-size: 5rem;">--</h1>
+                            <p class="text-primary-q fs-4 fw-bold mb-0" id="currentOwner">Customer Name</p>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-white border-0 pb-4 px-4">
+                        <div class="row g-3">
+                            <div class="col-md-4 col-12">
+                                <button class="btn btn-outline-danger w-100 py-3 fw-bold rounded-3 h-100 d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                    <i class="bi bi-x-circle-fill fs-5"></i>
+                                    <span>CANCEL / NO SHOW</span>
+                                </button>
+                            </div>
+                            <div class="col-md-8 col-12">
+                                <div class="d-flex gap-2 h-100">
+                                    <button class="btn btn-outline-primary w-25 py-3 fw-bold rounded-3 h-100 d-flex flex-column align-items-center justify-content-center" onclick="openTransferList()" title="Transfer Ticket">
+                                        <i class="bi bi-arrow-left-right fs-4"></i>
+                                    </button>
+                                    <button class="btn btn-success w-75 py-3 fw-bold rounded-3 h-100 shadow-sm d-flex align-items-center justify-content-center gap-2 scale-hover" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                                        <i class="bi bi-check-circle-fill fs-4"></i>
+                                        <span>COMPLETE TRANSACTION</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-lg-4">
+
+                <div class="card shadow-sm border-0 rounded-4 mb-3 bg-q-blue text-white">
+                    <div class="card-body p-4">
+                        <h6 class="opacity-75 text-uppercase fw-bold small mb-1">Current Station</h6>
+                        <h3 class="fw-bold mb-0" id="sidebarCounterName">--</h3>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 rounded-4" style="height: calc(100% - 110px);">
+                    <div class="card-header bg-white fw-bold py-3 d-flex justify-content-between align-items-center border-bottom">
+                        <span class="small text-muted text-uppercase fw-bold ls-1"><i class="bi bi-list-ol me-2"></i>Waiting List</span>
+                        <span class="badge bg-primary-subtle text-primary-q rounded-pill" id="waitingCount">0 Waiting</span>
+                    </div>
+
+                    <div class="card-body p-0 overflow-hidden position-relative">
+                        <div class="list-group list-group-flush custom-scroll h-100" id="waitingList" style="overflow-y: auto; max-height: 500px;">
+                            <div class="text-center py-5 mt-4">
+                                <div class="text-muted opacity-25 mb-2"><i class="bi bi-inbox-fill display-4"></i></div>
+                                <h6 class="fw-bold text-muted">Queue is Empty</h6>
+                                <p class="text-muted small">Relax and wait for new tickets.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 rounded-4 h-100">
-            <div class="card-header bg-white fw-bold py-3 border-bottom d-flex justify-content-between align-items-center">
-                <span class="small text-uppercase ls-2 text-muted">Waiting List</span>
-                <span class="badge bg-primary-subtle text-primary-q rounded-pill" id="waitingCount">0</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="list-group list-group-flush custom-scroll" id="waitingList" style="max-height: 50vh; overflow-y: auto;">
-                    <div class="text-center py-5 text-muted small">
-                        Queue is empty.
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <footer class="text-center py-4 mt-2">
+            <small class="text-muted opacity-50">OneQueue v1.0.0 &bull; Teller Module</small>
+        </footer>
     </div>
 </div>
 
 <div class="modal fade" id="cancelModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-body p-4 text-center">
-                <h5 class="fw-bold text-dark mb-4">Select Reason</h5>
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-circle-fill me-2"></i>End Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4">Please select the reason for cancelling this ticket.</p>
                 <div class="d-grid gap-2">
-                    <button onclick="handleAction('noshow')" class="btn btn-outline-danger py-2 fw-bold rounded-3" data-bs-dismiss="modal">NO SHOW</button>
-                    <button onclick="handleAction('unavailable')" class="btn btn-outline-secondary py-2 fw-bold rounded-3" data-bs-dismiss="modal">NOT AVAILABLE</button>
-                    <button onclick="handleAction('other')" class="btn btn-outline-secondary py-2 fw-bold rounded-3" data-bs-dismiss="modal">OTHER</button>
-                </div>
-                <div class="mt-3">
-                    <button type="button" class="btn btn-link text-muted text-decoration-none small" data-bs-dismiss="modal">Back</button>
+                    <button onclick="handleAction('noshow')" class="btn btn-outline-danger py-3 fw-bold rounded-3 text-start px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-person-x-fill me-2"></i> Customer No Show
+                    </button>
+                    <button onclick="handleAction('unavailable')" class="btn btn-outline-secondary py-3 fw-bold rounded-3 text-start px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-slash-circle me-2"></i> Documents Unavailable
+                    </button>
+                    <button onclick="handleAction('other')" class="btn btn-outline-secondary py-3 fw-bold rounded-3 text-start px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-question-circle me-2"></i> Other Reason
+                    </button>
                 </div>
             </div>
         </div>
@@ -110,23 +176,20 @@
 </div>
 
 <div class="modal fade" id="confirmModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-body p-4 text-center">
-                <h5 class="fw-bold text-dark mb-4">Complete Transaction?</h5>
-
-                <div class="d-grid gap-3">
-                    <button onclick="handleAction('complete')" class="btn btn-success py-3 fw-bold shadow-sm rounded-3" data-bs-dismiss="modal">
-                        <i class="bi bi-check-lg me-2"></i>COMPLETE
-                    </button>
-
-                    <button onclick="openTransferList()" class="btn btn-outline-primary py-3 fw-bold rounded-3" data-bs-dismiss="modal">
-                        <i class="bi bi-arrow-left-right me-2"></i>TRANSFER
-                    </button>
+            <div class="modal-body p-5 text-center">
+                <div class="icon-circle-responsive bg-success-subtle text-success mb-3 mx-auto" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                    <i class="bi bi-check-lg display-4"></i>
                 </div>
+                <h4 class="fw-bold text-dark mb-2">Transaction Complete?</h4>
+                <p class="text-muted mb-4">This will mark the ticket as processed and update the metrics.</p>
 
-                <div class="mt-4">
-                    <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Cancel</button>
+                <div class="d-grid gap-2">
+                    <button onclick="handleAction('complete')" class="btn btn-success py-3 fw-bold shadow-sm rounded-3" data-bs-dismiss="modal">
+                        CONFIRM COMPLETION
+                    </button>
+                    <button type="button" class="btn btn-link text-muted text-decoration-none" data-bs-dismiss="modal">Go Back</button>
                 </div>
             </div>
         </div>
@@ -134,13 +197,14 @@
 </div>
 
 <div class="modal fade" id="transferModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 pb-0">
-                <h6 class="fw-bold text-dark">Select Counter</h6>
+                <h5 class="modal-title fw-bold text-primary-q">Transfer Ticket</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-3">
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-3">Select a counter to transfer this ticket to:</p>
                 <div class="d-grid gap-2" id="transferList">
                 </div>
             </div>

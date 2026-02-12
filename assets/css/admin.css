@@ -1,64 +1,229 @@
-/*admin.css*/
-@import 'global.css';
+/* =========================================
+   1. CORE LAYOUT & MOBILE DEFAULTS
+   ========================================= */
+
+:root {
+    --header-height: 60px;
+}
+
+body {
+    padding-bottom: 80px; /* Space for scrolling on mobile */
+}
+
+/* Container Constraint for PC */
+.admin-container-width {
+    width: 100%;
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+@media (min-width: 1200px) {
+    .admin-container-width {
+        max-width: 1140px;
+    }
+}
+
+/* =========================================
+   2. STICKY HEADER & TABS
+   ========================================= */
 
 .sticky-header {
-    position: sticky; top: 0; z-index: 1020; background: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    background-color: var(--q-blue);
+    box-shadow: 0 1px 10px rgba(0,0,0,0.1);
 }
-.navbar-custom { background-color: var(--q-blue) !important; padding-bottom: 0.5rem; z-index: 1021; }
-.admin-tabs-bar { background: white; border-bottom: 1px solid #f0f0f0; padding: 0.75rem 1rem; }
+
+.navbar-custom {
+    min-height: var(--header-height);
+    padding: 0;
+}
+
+#logoutBtn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+#logoutBtn:active {
+    background: rgba(255,255,255,0.2);
+}
+
+/* Tabs Bar */
+.admin-tabs-bar {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 1020;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.admin-tabs-bar::-webkit-scrollbar { display: none; }
+
+.nav-pills { display: inline-flex; padding: 0 1rem; }
 
 .nav-pills .nav-link {
-    color: #6c757d; font-weight: 600; margin-right: 0.5rem; border-radius: 50rem;
-    padding: 0.5rem 1.25rem; transition: all 0.2s ease; font-size: 0.95rem;
-    display: flex; align-items: center; gap: 8px;
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    margin-right: 8px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
 }
-.nav-pills .nav-link:hover { background-color: #f8f9fa; color: var(--q-blue); }
-.nav-pills .nav-link.active { background-color: var(--q-blue); color: white; box-shadow: 0 2px 4px rgba(0, 56, 168, 0.25); }
 
-@media (max-width: 768px) {
-    .admin-tabs-bar { padding: 0; border: none; height: 0; }
+.nav-pills .nav-link.active {
+    background-color: var(--q-blue-hover);
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 56, 168, 0.2);
+}
 
-    .nav-pills {
-        position: fixed; bottom: 0; left: 0; width: 100%;
-        background: #ffffff; z-index: 1040;
-        display: flex; justify-content: space-around;
-        padding: 8px 0 20px 0; /* Adjusted padding */
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-        border-top: 1px solid #f0f0f0; margin: 0;
+/* =========================================
+   3. OVERVIEW: STATUS BUTTONS
+   ========================================= */
+
+/* Mobile First: Stacked Vertically */
+.btn-group-responsive {
+    display: flex;
+    flex-direction: column; /* Stacked */
+    gap: 12px; /* Space between buttons */
+    width: 100%;
+    margin-top: 1rem;
+}
+
+/* Button Styling */
+.btn-group-responsive .btn {
+    padding: 12px 0;
+    font-size: 0.95rem;
+    border-radius: 8px !important; /* Force rounded corners when stacked */
+}
+
+/* PC View: Inline Horizontal */
+@media (min-width: 768px) {
+    .btn-group-responsive {
+        flex-direction: row; /* Inline */
+        width: auto;
+        margin-top: 0;
+        gap: 8px;
     }
 
-    .nav-pills .nav-item { flex: 1; text-align: center; }
-
-    .nav-pills .nav-link {
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background: transparent !important;
-        color: #adb5bd; border-radius: 0;
-        padding: 0; margin: 0;
-        font-size: 0.7rem; gap: 4px;
-        box-shadow: none !important;
-        width: 100%;
+    .btn-group-responsive .btn {
+        padding: 8px 24px;
+        flex: none;
     }
-
-    .nav-pills .nav-link i { font-size: 1.5rem; margin-bottom: 0; display: block; line-height: 1; }
-    .nav-pills .nav-link.active { color: var(--q-blue) !important; background: transparent !important; }
-
-    body { padding-bottom: 90px; }
-    .mobile-hide { display: none; }
-    .btn-group-responsive { display: grid; gap: 0.5rem; width: 100%; }
-    .btn-group-responsive .btn { border-radius: 0.5rem !important; margin-bottom: 0; }
 }
 
-@media (min-width: 769px) {
-    .admin-container-width { max-width: 1200px; margin: 0 auto; }
-    .btn-group-responsive { display: inline-flex; gap: 10px; }
+/* Selected State Colors */
+.btn-check:checked + .btn-outline-success { background-color: #198754; color: white; border-color: #198754; }
+.btn-check:checked + .btn-outline-warning { background-color: #ffc107; color: #000; border-color: #ffc107; }
+.btn-check:checked + .btn-outline-danger  { background-color: var(--q-red); color: white; border-color: var(--q-red); }
+
+/* =========================================
+   4. TICKET HANDLING: ALWAYS STACKED
+   ========================================= */
+
+/* Force stacking on ALL views for Ticket Handling items */
+#ticketHandling .row {
+    flex-direction: column; /* Force column layout */
+    align-items: center;    /* Center items */
 }
 
-.stat-card { border-left: 4px solid transparent; transition: transform 0.2s; background: var(--bg-surface); }
-.stat-card:hover { transform: translateY(-3px); }
-.stat-card.waiting { border-left-color: var(--q-yellow); }
-.stat-card.processed { border-left-color: #198754; }
-.stat-card.noshow { border-left-color: #dc3545; }
-.stat-card.total { border-left-color: var(--q-blue); }
+#ticketHandling .col-lg-6 {
+    width: 100% !important;
+    max-width: 600px !important; /* Keep readable width on PC */
+    flex: 0 0 100% !important;
+    margin-bottom: 20px; /* Proper padding between stacked cards */
+}
+
+/* =========================================
+   5. CARDS & STATS
+   ========================================= */
+
+.card {
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+.stat-card { position: relative; overflow: hidden; }
+.stat-card.waiting::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #ffc107; }
+.stat-card.processed::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #198754; }
+.stat-card.noshow::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--q-red); }
+.stat-card.total::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--q-blue); }
+
+@media (min-width: 992px) {
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+}
+
+/* =========================================
+   6. TABLES & LISTS
+   ========================================= */
+
+.table thead th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #888;
+    background-color: #f8f9fa;
+    padding: 12px;
+}
+.table tbody td { padding: 14px 12px; vertical-align: middle; }
+
+@media (max-width: 576px) { .mobile-hide { display: none; } }
+
+/* =========================================
+   7. UTILITIES & ICONS
+   ========================================= */
+
+/* Icon Circles */
+.icon-circle-responsive {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+/* Search Input */
+#searchTicket {
+    font-size: 1.1rem;
+    padding: 12px;
+}
+
+/* Result Animation */
+#ticketResult.fade-in { animation: slideUpFade 0.3s ease-out forwards; }
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Switch Styling */
+.form-switch .form-check-input {
+    width: 3em;
+    height: 1.5em;
+    cursor: pointer;
+}
+.form-switch .form-check-input:checked {
+    background-color: var(--q-blue);
+    border-color: var(--q-blue);
+}
+
+/* Rotate Arrow */
+.card-header[data-bs-toggle="collapse"] .bi-chevron-down { transition: transform 0.3s ease; }
+.card-header[aria-expanded="true"] .bi-chevron-down { transform: rotate(180deg); }
+
+/* Loader */
+#adminLoader { background-color: var(--bg-surface); }
