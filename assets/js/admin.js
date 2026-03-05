@@ -106,29 +106,7 @@ function setupOverviewTab() {
     });
 
     // Per Teller Stats Table
-    const tellerStatsContainer = document.createElement('div');
-    tellerStatsContainer.innerHTML = `
-        <h6 class="text-muted text-uppercase fw-bold small ls-2 mb-3 mt-4">Per Teller Stats</h6>
-        <div class="card shadow-sm border-0 rounded-4">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="perTellerTable">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4">Teller / Counter</th>
-                            <th class="text-center">Queued</th>
-                            <th class="text-center">Processed</th>
-                            <th class="text-center">Cancelled</th>
-                            <th class="text-center">No-Show</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-    `;
-    document.querySelector('#overview').appendChild(tellerStatsContainer);
-
-    const perTellerTbody = document.getElementById('perTellerTable').querySelector('tbody');
+    const perTellerTbody = document.getElementById('perTellerTbody');
     AdminService.listenToTellerStats((stats) => {
         perTellerTbody.innerHTML = stats.length === 0 
             ? `<tr><td colspan="5" class="text-center py-4 text-muted">No teller data yet</td></tr>`
