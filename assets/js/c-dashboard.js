@@ -173,19 +173,52 @@ function handleScannedQR(qrData) {
         if (qrData.startsWith("kiosk_")) {
             const kioskId = qrData.replace("kiosk_", "");
             
-            // Show confirmation to join queue
-            UIService.showConfirm(
-                "Join Queue?",
-                "Do you want to join the queue for this kiosk?",
-                "JOIN",
-                () => {
-                    // TODO: Implement queue joining logic here
-                    // This would typically call a QueueService to add the user to the queue
-                    console.log("Joining queue for kiosk:", kioskId);
-                    
-                    UIService.showModal('success', 'Success', 'You have joined the queue! Check your history for updates.');
-                }
-            );
+            // Get user profile info from localStorage or DOM
+            const isPriority = document.getElementById("CPriority")?.checked || false;
+            const isPregnant = document.getElementById("checkPregnant")?.checked || false;
+            
+            // Determine lane type
+            let laneType = "Regular";
+            if (isPriority || isPregnant) {
+                laneType = "PWD/Senior";
+            }
+            
+            // Generate random ticket number
+            const ticketNumber = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+            
+// If user is PWD/Pregnant, show warning about bringing proof
+            if (isPriority || isPregnant) {
+                UIService.showConfirm(
+                    "Join Queue?",
+                    "You are required to bring proof on the day of queueing.",
+                    "JOIN",
+                    () => {
+                        // Navigate to ticket page with parameters
+                        const params = new URLSearchParams({
+                            ticketNumber: ticketNumber,
+                            type: laneType,
+                            status: "Waiting"
+                        });
+                        window.location.href = `ticket.html?${params.toString()}`;
+                    }
+                );
+            } else {
+                // Regular user - direct join
+                UIService.showConfirm(
+                    "Join Queue?",
+                    "Do you want to join the queue for this kiosk?",
+                    "JOIN",
+                    () => {
+                        // Navigate to ticket page with parameters
+                        const params = new URLSearchParams({
+                            ticketNumber: ticketNumber,
+                            type: laneType,
+                            status: "Waiting"
+                        });
+                        window.location.href = `ticket.html?${params.toString()}`;
+                    }
+                );
+            }
         } else {
             UIService.showModal('error', 'Invalid QR', 'This QR code is not valid for joining a queue.');
         }
