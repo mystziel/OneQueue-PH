@@ -1,0 +1,60 @@
+/* Import Global Design System */
+@import 'global.css';
+
+/* --- Sketch Specific Styles --- */
+
+/* 1. Main Card Typography */
+.main-card {
+    border: 2px solid #f0f0f0; /* Slight border definition */
+}
+
+.tracking-wide {
+    letter-spacing: -2px;
+    line-height: 1;
+}
+
+/* 2. Break Toggle (Navbar) */
+.form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+    cursor: pointer;
+}
+.form-check-input:checked {
+    background-color: var(--q-yellow);
+    border-color: var(--q-yellow);
+}
+
+/* 3. Action Buttons */
+.scale-hover { transition: transform 0.1s; }
+.scale-hover:active { transform: scale(0.97); }
+
+/* 4. Waiting List Items (Simulating the 'lines' in sketch) */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.list-group-item:last-child { border-bottom: none; }
+
+/* Status Indicators on Left of List Item */
+.ticket-item {
+    border-left: 4px solid transparent;
+}
+.ticket-priority { border-left-color: var(--q-red); background: #fffbfb; }
+.ticket-regular { border-left-color: var(--q-blue); }
+
+/* 5. Modals */
+.modal-content {
+    border: 2px solid #f0f0f0; /* Match sketch 'box' feel */
+}
+
+/* Responsive Fixes */
+@media (min-width: 768px) {
+    .responsive-container {
+        max-width: 600px; /* Keep it phone-sized on desktop for cleaner look */
+        margin: 0 auto;
+    }
+}
