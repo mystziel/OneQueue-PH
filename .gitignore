@@ -12,4 +12,5 @@ Thumbs.db
 
 # Build
 dist/
+.vite/
 

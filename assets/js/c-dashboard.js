@@ -1,104 +1,134 @@
 // assets/js/c-dashboard.js
 import { UIService } from './ui-service.js';
-import { AuthService } from "./auth";
+import { AuthService } from "./auth.js";
+import { auth, db } from './firebase-config.js';
+import { doc, setDoc, getDoc, updateDoc, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 let html5QrcodeScanner = null;
+let currentUser = null;
 
-document.addEventListener("DOMContentLoaded", () => {
-
-    //Loading Screen
-    const loader = document.getElementById("mainLoader");
-    const content = document.getElementById("mainContent");
-
-    setTimeout(() => {
-        loader.classList.add("d-none");
-        loader.classList.remove("d-flex");
-        content.classList.remove("d-none");
-    }, 1500);
-
-    //Logout
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-
-            UIService.showConfirm(
-                "Log Out?",
-                "Are you sure you want to end your session?",
-                "Log Out",
-                async () => {
-
-                    await AuthService.logout();
-
-                    window.location.href = "../index.html";
-                }
-            );
-        });
+// Initialize auth state and load profile
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        await loadUserProfile(user.uid);
+    } else {
+        // Not logged in, redirect to login
+        window.location.href = "../index.html";
     }
+});
 
-    //Edit Profile Button
-    const editProfileBtn = document.getElementById("editProfileBtn");
-    const setupProfileModal = document.getElementById("setupProfileModal");
-    const profileForm = document.getElementById("profileForm");
-
-    if (editProfileBtn && setupProfileModal) {
-        editProfileBtn.addEventListener("click", () => {
-            const bsModal = new bootstrap.Modal(setupProfileModal);
-            bsModal.show();
-        });
-    }
-
-    //Profile Form Submit
-    if (profileForm) {
-        profileForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const name = document.getElementById("inputName").value;
-            const mobileInput = document.getElementById("inputMobile");
-            const mobile = mobileInput.value.replace(/\s/g, ''); // Remove all spaces
-            const birthday = document.getElementById("inputBirthday").value;
-            const sex = document.querySelector('input[name="sex"]:checked').value;
-            const isPriority = document.getElementById("CPriority").checked;
-            const isPregnant = document.getElementById("checkPregnant")?.checked || false;
-
-            // Validate mobile number: exactly 11 digits
-            if (!/^[0-9]{11}$/.test(mobile)) {
-                UIService.showModal('error', 'Invalid Mobile', 'Mobile number must be exactly 11 digits (e.g., 09123456789).');
-                return;
-            }
-
-            // Update the input value with the cleaned mobile (no spaces)
-            mobileInput.value = mobile;
-
-            console.log("Profile updated:", { name, mobile, birthday, sex, isPriority, isPregnant });
-
-            // TODO: Save profile data to Firebase/Firestore
-            // For now, show success message
-            UIService.showModal('success', 'Profile Updated', 'Your profile has been saved successfully.');
-
-            // Hide modal
-            const bsModal = bootstrap.Modal.getInstance(setupProfileModal);
-            if (bsModal) {
-                bsModal.hide();
-            }
-
-            // Update the displayed profile info
-            document.getElementById("DName").textContent = name;
-            document.getElementById("DMobile").textContent = mobile;
+// --- Load User Profile from Firestore ---
+async function loadUserProfile(uid) {
+    try {
+        const userDocRef = doc(db, "users", uid);
+        const userDocSnap = await getDoc(userDocRef);
+        
+        if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            
+            // Update displayed profile info
+            document.getElementById("DName").textContent = userData.name || "Name";
+            document.getElementById("DMobile").textContent = userData.mobile || "Mobile Number";
             
             // Update priority badge
             const priorityBadge = document.getElementById("priorityBadge");
-            if (isPriority || isPregnant) {
+            if (userData.isPriority || userData.isPregnant) {
                 priorityBadge.className = "badge bg-warning text-dark border border-warning mt-2";
-                priorityBadge.textContent = isPregnant ? "Pregnant" : "Priority";
+                priorityBadge.textContent = userData.isPregnant ? "Pregnant" : "Priority";
             } else {
                 priorityBadge.className = "badge bg-secondary-subtle text-secondary border border-secondary-subtle mt-2";
                 priorityBadge.textContent = "Regular";
             }
-        });
+            
+            // Pre-fill form fields
+            if (document.getElementById("inputName")) {
+                document.getElementById("inputName").value = userData.name || "";
+            }
+            if (document.getElementById("inputMobile")) {
+                document.getElementById("inputMobile").value = userData.mobile || "";
+            }
+            if (document.getElementById("inputBirthday")) {
+                document.getElementById("inputBirthday").value = userData.birthday || "";
+            }
+            if (userData.sex) {
+                const sexRadio = document.querySelector(`input[name="sex"][value="${userData.sex}"]`);
+                if (sexRadio) sexRadio.checked = true;
+            }
+            if (document.getElementById("CPriority")) {
+                document.getElementById("CPriority").checked = userData.isPriority || false;
+            }
+            if (document.getElementById("checkPregnant")) {
+                document.getElementById("checkPregnant").checked = userData.isPregnant || false;
+            }
+            
+            // Show pregnancy option if female
+            if (userData.sex === "female") {
+                const pregnancyOption = document.getElementById("pregnancyOption");
+                if (pregnancyOption) {
+                    pregnancyOption.classList.remove("d-none");
+                }
+            }
+            
+            console.log("Profile loaded from Firebase:", userData);
+        }
+    } catch (error) {
+        console.error("Error loading profile:", error);
     }
-});
+}
+
+// --- Save Profile to Firestore ---
+async function saveProfileToFirestore(uid, profileData) {
+    try {
+        const userDocRef = doc(db, "users", uid);
+        
+        console.log("Saving profile to Firebase for uid:", uid);
+        console.log("Profile data:", profileData);
+        
+        // Use setDoc with merge option - this works better with some security rules
+        await setDoc(userDocRef, {
+            email: currentUser?.email || "",
+            role: 'citizen',
+            name: profileData.name,
+            mobile: profileData.mobile,
+            birthday: profileData.birthday,
+            sex: profileData.sex,
+            isPriority: profileData.isPriority,
+            isPregnant: profileData.isPregnant,
+            setupComplete: true,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+        
+        console.log("Profile saved to Firebase successfully");
+        return true;
+    } catch (error) {
+        console.error("Error saving profile:", error);
+        console.error("Error code:", error.code);
+        console.error("Error message:", error.message);
+        UIService.showModal('error', 'Save Error', 'Failed to save profile. Please try again. Error: ' + error.message);
+        return false;
+    }
+}
+
+// --- Save Ticket to Firestore ---
+async function saveTicketToFirestore(ticketData) {
+    try {
+        const ticketsCollectionRef = collection(db, "tickets");
+        const ticketDocRef = await addDoc(ticketsCollectionRef, {
+            ...ticketData,
+            createdAt: serverTimestamp(),
+            status: "Waiting"
+        });
+        
+        console.log("Ticket saved to Firebase with ID:", ticketDocRef.id);
+        return ticketDocRef.id;
+    } catch (error) {
+        console.error("Error saving ticket:", error);
+        UIService.showModal('error', 'Ticket Error', 'Failed to create ticket. Please try again.');
+        return null;
+    }
+}
 
 // --- QR Scanner Functions ---
 
@@ -177,6 +207,10 @@ function handleScannedQR(qrData) {
             const isPriority = document.getElementById("CPriority")?.checked || false;
             const isPregnant = document.getElementById("checkPregnant")?.checked || false;
             
+            // Get user name for the ticket
+            const userName = document.getElementById("DName")?.textContent || "Unknown";
+            const userMobile = document.getElementById("DMobile")?.textContent || "";
+            
             // Determine lane type
             let laneType = "Regular";
             if (isPriority || isPregnant) {
@@ -192,9 +226,22 @@ function handleScannedQR(qrData) {
                     "Join Queue?",
                     "You are required to bring proof on the day of queueing.",
                     "JOIN",
-                    () => {
+                    async () => {
+                        // Save ticket to Firebase
+                        const ticketId = await saveTicketToFirestore({
+                            ticketNumber: ticketNumber,
+                            laneType: laneType,
+                            kioskId: kioskId,
+                            userId: currentUser.uid,
+                            userName: userName,
+                            userMobile: userMobile,
+                            isPriority: isPriority,
+                            isPregnant: isPregnant
+                        });
+                        
                         // Navigate to ticket page with parameters
                         const params = new URLSearchParams({
+                            ticketId: ticketId,
                             ticketNumber: ticketNumber,
                             type: laneType,
                             status: "Waiting"
@@ -208,9 +255,22 @@ function handleScannedQR(qrData) {
                     "Join Queue?",
                     "Do you want to join the queue for this kiosk?",
                     "JOIN",
-                    () => {
+                    async () => {
+                        // Save ticket to Firebase
+                        const ticketId = await saveTicketToFirestore({
+                            ticketNumber: ticketNumber,
+                            laneType: laneType,
+                            kioskId: kioskId,
+                            userId: currentUser.uid,
+                            userName: userName,
+                            userMobile: userMobile,
+                            isPriority: isPriority,
+                            isPregnant: isPregnant
+                        });
+                        
                         // Navigate to ticket page with parameters
                         const params = new URLSearchParams({
+                            ticketId: ticketId,
                             ticketNumber: ticketNumber,
                             type: laneType,
                             status: "Waiting"
@@ -227,3 +287,114 @@ function handleScannedQR(qrData) {
         UIService.showModal('error', 'Error', 'Failed to process QR code.');
     }
 }
+
+// --- DOM Content Loaded Setup ---
+document.addEventListener("DOMContentLoaded", () => {
+
+    //Loading Screen
+    const loader = document.getElementById("mainLoader");
+    const content = document.getElementById("mainContent");
+
+    setTimeout(() => {
+        loader.classList.add("d-none");
+        loader.classList.remove("d-flex");
+        content.classList.remove("d-none");
+    }, 1500);
+
+    //Logout
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+
+            UIService.showConfirm(
+                "Log Out?",
+                "Are you sure you want to end your session?",
+                "Log Out",
+                async () => {
+
+                    await AuthService.logout();
+
+                    window.location.href = "../index.html";
+                }
+            );
+        });
+    }
+
+    //Edit Profile Button
+    const editProfileBtn = document.getElementById("editProfileBtn");
+    const setupProfileModal = document.getElementById("setupProfileModal");
+
+    if (editProfileBtn && setupProfileModal) {
+        editProfileBtn.addEventListener("click", () => {
+            const bsModal = new bootstrap.Modal(setupProfileModal);
+            bsModal.show();
+        });
+    }
+
+    //Profile Form Submit
+    const profileForm = document.getElementById("profileForm");
+    if (profileForm) {
+        profileForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById("inputName").value;
+            const mobileInput = document.getElementById("inputMobile");
+            const mobile = mobileInput.value.replace(/\s/g, ''); // Remove all spaces
+            const birthday = document.getElementById("inputBirthday").value;
+            const sex = document.querySelector('input[name="sex"]:checked').value;
+            const isPriority = document.getElementById("CPriority").checked;
+            const isPregnant = document.getElementById("checkPregnant")?.checked || false;
+
+            // Validate mobile number: exactly 11 digits
+            if (!/^[0-9]{11}$/.test(mobile)) {
+                UIService.showModal('error', 'Invalid Mobile', 'Mobile number must be exactly 11 digits (e.g., 09123456789).');
+                return;
+            }
+
+            // Update the input value with the cleaned mobile (no spaces)
+            mobileInput.value = mobile;
+
+            console.log("Profile updated:", { name, mobile, birthday, sex, isPriority, isPregnant });
+
+            // Save profile to Firebase
+            if (currentUser) {
+                const saveSuccess = await saveProfileToFirestore(currentUser.uid, {
+                    name: name,
+                    mobile: mobile,
+                    birthday: birthday,
+                    sex: sex,
+                    isPriority: isPriority,
+                    isPregnant: isPregnant
+                });
+                
+                if (!saveSuccess) {
+                    return; // Don't proceed if save failed
+                }
+            }
+
+            UIService.showModal('success', 'Profile Updated', 'Your profile has been saved successfully.');
+
+            // Hide modal
+            const bsModal = bootstrap.Modal.getInstance(setupProfileModal);
+            if (bsModal) {
+                bsModal.hide();
+            }
+
+            // Update the displayed profile info
+            document.getElementById("DName").textContent = name;
+            document.getElementById("DMobile").textContent = mobile;
+            
+            // Update priority badge
+            const priorityBadge = document.getElementById("priorityBadge");
+            if (isPriority || isPregnant) {
+                priorityBadge.className = "badge bg-warning text-dark border border-warning mt-2";
+                priorityBadge.textContent = isPregnant ? "Pregnant" : "Priority";
+            } else {
+                priorityBadge.className = "badge bg-secondary-subtle text-secondary border border-secondary-subtle mt-2";
+                priorityBadge.textContent = "Regular";
+            }
+        });
+    }
+});
