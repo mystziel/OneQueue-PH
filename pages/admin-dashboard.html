@@ -84,7 +84,8 @@
                         <div class="row g-3 mb-4">
                             <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card waiting h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statWaiting">0</h2><small class="text-muted small">Waiting</small></div></div></div>
                             <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card processed h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statProcessed">0</h2><small class="text-muted small">Processed</small></div></div></div>
-                            <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card noshow h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statNoShow">0</h2><small class="text-muted small">Cancelled</small></div></div></div>
+                            <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card noshow h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statCancelled">0</h2><small class="text-muted small">Cancelled</small></div></div></div>
+                            <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card noshow h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statNoShow">0</h2><small class="text-muted small">No-Show</small></div></div></div>
                             <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card total h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0 text-primary-q" id="statTotal">0</h2><small class="text-muted small">Total</small></div></div></div>
                         </div>
 
@@ -119,6 +120,29 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="mt-5 pt-4 border-top">
+                    <h6 class="text-muted text-uppercase fw-bold small ls-2 mb-3">Per Teller Stats</h6>
+                    <div class="card shadow-sm border-0 rounded-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="perTellerTable">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Teller / Counter</th>
+                                        <th class="text-center">Queued</th>
+                                        <th class="text-center">Processed</th>
+                                        <th class="text-center">Cancelled</th>
+                                        <th class="text-center">No-Show</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="perTellerTbody">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <footer class="text-center py-4 mt-2">
                     <small class="text-muted opacity-50">OneQueue PH v1.0.0</small>
                 </footer>
