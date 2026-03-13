@@ -11,37 +11,63 @@ let timerInterval = null;
 let waitingTickets = [];
 let notifiedTickets = new Set();
 
-// Simulated SMS gateway
+// SMS SERVICE
 const SMSService = {
-    send: (userName, mobile, message) => {
-        const timestamp = new Date().toLocaleTimeString();
+    apiKey: 'sk-2b10yvivixgpcjk6vdbl5ulxquotnh5u',
+    apiUrl: 'https://smsapiph.onrender.com/api/v1/send/sms',
 
-        console.log(
-            `%c 📱 SMS OUTGOING [${timestamp}] %c\nTO: ${userName} (${mobile})\nMSG: ${message}`,
-            "background: #007bff; color: white; font-weight: bold; padding: 2px 5px; border-radius: 3px;",
-            "color: #007bff; font-weight: bold;"
-        );
+    send: async (userName, mobile, message) => {
+        let formattedMobile = mobile.replace(/\s/g, '');
+        if (formattedMobile.startsWith('09')) {
+            formattedMobile = '+63' + formattedMobile.substring(1);
+        }
 
-        console.info(`Notification sent to ${userName}`);
+        try {
+            const response = await fetch(SMSService.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'x-api-key': SMSService.apiKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    recipient: formattedMobile,
+                    message: message
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                console.log(` SMS Sent to ${userName}: ${message}`, data);
+                console.log("Sending to:", formattedMobile);
+            } else {
+                console.error(` SMS Failed:`, data);
+            }
+        } catch (error) {
+            console.error(" SMS Network Error:", error);
+        }
     },
 
-    // Trigger positional alerts
     processQueueNotifications: (tickets) => {
         tickets.forEach((t, index) => {
             const position = index + 1;
-            const mobile = t.userMobile || "No Mobile Provided";
+            const mobile = t.userMobile;
             const name = t.userName || "Customer";
 
-            let message = "";
+            if (!mobile || mobile === "No Mobile Provided") return;
+
+            // Unique key: ticketId + current position
             const notificationKey = `${t.id}_${position}`;
 
             if (!notifiedTickets.has(notificationKey)) {
+                let message = "";
+
                 if (position === 1) {
-                    message = "OneQueue PH: You are NEXT! Please stay near the waiting area.";
+                    message = `OneQueue PH: Hello ${name}, you are NEXT! Please check the website for your counter.`;
                 } else if (position === 5) {
-                    message = "OneQueue PH: You are 5th in line. Please proceed to establishment.";
+                    message = `OneQueue PH: Hi ${name}, you are 5th in line. Your turn is coming up soon.`;
                 } else if (position === 10) {
-                    message = "OneQueue PH: You are now 10th in line. Your turn is approaching.";
+                    message = `OneQueue PH: Hi ${name}, you are now 10th in line. Thank you for waiting.`;
                 }
 
                 if (message) {
