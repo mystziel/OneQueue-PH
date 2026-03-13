@@ -64,9 +64,6 @@
                             <i class="bi bi-bell-fill me-2"></i>CALL NEXT TICKET
                         </button>
                     </div>
-                    <div class="card-footer bg-white border-0 py-3">
-                        <small class="text-muted"><i class="bi bi-info-circle me-1"></i> Pressing call will trigger the lobby announcement.</small>
-                    </div>
                 </div>
 
                 <div id="servingPanel" class="card shadow-sm border-0 rounded-4 h-100 d-none">
@@ -91,24 +88,16 @@
                     </div>
 
                     <div class="card-footer bg-white border-0 pb-4 px-4">
-                        <div class="row g-3">
-                            <div class="col-md-4 col-12">
-                                <button class="btn btn-outline-danger w-100 py-3 fw-bold rounded-3 h-100 d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                                    <i class="bi bi-x-circle-fill fs-5"></i>
-                                    <span>CANCEL / NO SHOW</span>
-                                </button>
-                            </div>
-                            <div class="col-md-8 col-12">
-                                <div class="d-flex gap-2 h-100">
-                                    <button class="btn btn-outline-primary w-25 py-3 fw-bold rounded-3 h-100 d-flex flex-column align-items-center justify-content-center" onclick="openTransferList()" title="Transfer Ticket">
-                                        <i class="bi bi-arrow-left-right fs-4"></i>
-                                    </button>
-                                    <button class="btn btn-success w-75 py-3 fw-bold rounded-3 h-100 shadow-sm d-flex align-items-center justify-content-center gap-2 scale-hover" data-bs-toggle="modal" data-bs-target="#confirmModal">
-                                        <i class="bi bi-check-circle-fill fs-4"></i>
-                                        <span>COMPLETE TRANSACTION</span>
-                                    </button>
-                                </div>
-                            </div>
+                        <div class="d-grid gap-3">
+                            <button class="btn btn-success py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 scale-hover" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                                <i class="bi bi-check-circle-fill fs-4"></i>
+                                <span>COMPLETE TRANSACTION</span>
+                            </button>
+
+                            <button class="btn btn-outline-danger py-3 fw-bold rounded-3 d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                <i class="bi bi-x-circle-fill fs-5"></i>
+                                <span>CANCEL / NO SHOW</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -121,6 +110,7 @@
                     <div class="card-body p-4">
                         <h6 class="opacity-75 text-uppercase fw-bold small mb-1">Current Station</h6>
                         <h3 class="fw-bold mb-0" id="sidebarCounterName">--</h3>
+                        <p class="small opacity-75 mb-0 mt-1" id="sidebarTellerName">Loading name...</p>
                     </div>
                 </div>
 
@@ -196,21 +186,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="transferModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-primary-q">Transfer Ticket</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <p class="text-muted small mb-3">Select a counter to transfer this ticket to:</p>
-                <div class="d-grid gap-2" id="transferList">
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 <script type="module" src="../assets/js/teller.js"></script>

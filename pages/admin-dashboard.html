@@ -84,8 +84,7 @@
                         <div class="row g-3 mb-4">
                             <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card waiting h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statWaiting">0</h2><small class="text-muted small">Waiting</small></div></div></div>
                             <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card processed h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statProcessed">0</h2><small class="text-muted small">Processed</small></div></div></div>
-                            <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card noshow h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statCancelled">0</h2><small class="text-muted small">Cancelled</small></div></div></div>
-                            <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card noshow h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statNoShow">0</h2><small class="text-muted small">No-Show</small></div></div></div>
+                            <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card cancel h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0" id="statCancelled">0</h2><small class="text-muted small">Cancelled</small></div></div></div>
                             <div class="col-6 col-md-3"><div class="card shadow-sm border-0 rounded-3 stat-card total h-100"><div class="card-body p-3"><h2 class="fw-bold mb-0 text-primary-q" id="statTotal">0</h2><small class="text-muted small">Total</small></div></div></div>
                         </div>
 
@@ -107,6 +106,9 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            <div id="queuePagination" class="card-footer bg-white border-0 d-flex justify-content-end py-3"></div>
+
                         </div>
                     </div>
 
@@ -114,7 +116,7 @@
                         <div class="card shadow-sm border-0 rounded-4 mb-3">
                             <div class="card-header bg-white fw-bold py-3">Queue Control</div>
                             <div class="card-body">
-                                <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="limitSwitch"><label class="form-check-label fw-bold" for="limitSwitch">Limit Max Tickets</label></div>
+                                <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="limitSwitch"><label class="form-check-label fw-bold" for="limitSwitch"> Limit Max Tickets</label></div>
                                 <div class="input-group"><label for="maxTicketInput"></label><input type="number" id="maxTicketInput" class="form-control" placeholder="Max Qty" disabled><button class="btn btn-primary-q" id="saveLimitBtn" disabled>Save</button></div>
                             </div>
                         </div>
@@ -132,7 +134,6 @@
                                         <th class="text-center">Queued</th>
                                         <th class="text-center">Processed</th>
                                         <th class="text-center">Cancelled</th>
-                                        <th class="text-center">No-Show</th>
                                     </tr>
                                 </thead>
                                 <tbody id="perTellerTbody">
@@ -254,16 +255,35 @@
             <div class="modal-body p-4">
                 <form id="editTellerForm">
                     <input type="hidden" id="editTellerId">
-                    <div class="form-floating mb-3"><input type="text" class="form-control" id="editName" placeholder="Name"><label for="editName">Full Name</label></div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6"><div class="form-floating"><input type="text" class="form-control" id="editCounter" placeholder="Counter"><label for="editCounter">Counter Name</label></div></div>
-                        <div class="col-6"><div class="form-floating"><input type="text" class="form-control" id="editEmail" placeholder="Email" disabled><label for="editEmail">Email</label></div></div>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="editName" placeholder="Name" required>
+                        <label for="editName">Full Name</label>
                     </div>
-                    <div class="alert alert-light border border-dashed rounded-3 p-3 mb-3">
-                        <div class="mb-2"><label class="fw-bold text-danger small"><i class="bi bi-key-fill me-2"></i>Reset Password</label></div>
-                        <label for="editPassword"></label><input type="password" class="form-control form-control-sm" id="editPassword" placeholder="New Password (optional)">
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="editCounter" placeholder="Counter" required>
+                        <label for="editCounter">Counter Name</label>
                     </div>
-                    <div class="d-grid gap-2"><button type="submit" class="btn btn-primary-q fw-bold py-2 rounded-3">Save Changes</button></div>
+
+                    <div class="form-floating mb-4">
+                        <input type="email" class="form-control bg-light text-muted" id="editEmail" placeholder="Email" disabled readonly>
+                        <label for="editEmail">Email Address (Read-Only)</label>
+                    </div>
+
+                    <div class="border border-dashed rounded-3 p-3 mb-4 bg-light text-center">
+                        <p class="text-muted small mb-2">Need to reset this teller's password?</p>
+                        <button type="button" class="btn btn-outline-danger btn-sm fw-bold shadow-sm px-4" id="sendResetEmailBtn">
+                            <i class="bi bi-envelope-at-fill me-2"></i>SEND RESET EMAIL
+                        </button>
+                        <div id="resetEmailFeedback" class="text-success small fw-bold mt-2 d-none fade-in">
+                            <i class="bi bi-check-circle-fill me-1"></i> Email sent successfully!
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary-q fw-bold py-3 rounded-3 shadow-sm">SAVE CHANGES</button>
+                    </div>
                 </form>
             </div>
         </div>

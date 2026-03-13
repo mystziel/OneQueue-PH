@@ -155,7 +155,7 @@ body {
 .stat-card { position: relative; overflow: hidden; }
 .stat-card.waiting::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #ffc107; }
 .stat-card.processed::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #198754; }
-.stat-card.noshow::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--q-red); }
+.stat-card.cancel::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--q-red); }
 .stat-card.total::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--q-blue); }
 
 @media (min-width: 992px) {

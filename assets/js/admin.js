@@ -4,32 +4,45 @@ import { UIService } from './ui-service.js';
 import { AdminService } from './admin-service.js';
 
 let currentSettingsListener = null;
-let currentTellersListener = null;
 let currentStatsListener = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const loader = document.getElementById('adminLoader');
     const content = document.getElementById('adminContent');
 
+    // Initialize auth
     AuthService.observeAuth(async (user) => {
-        if (!user) return window.location.href = '../index.html';
+        if (user) {
+            // Await role verification
+            const role = await AuthService.getUserRole(user.uid);
+            if (role !== 'admin') {
+                window.location.href = '../index.html';
+                return;
+            }
 
-        const role = await AuthService.getUserRole(user.uid);
-        if (role !== 'admin') return window.location.href = '../index.html';
+            initializeAdmin();
 
-        loader.classList.add('d-none');
-        content.classList.remove('d-none');
-        content.classList.add('fade-in');
-
-        initializeAdmin();
+            loader.classList.add('d-none');
+            loader.classList.remove('d-flex');
+            content.classList.remove('d-none');
+            content.classList.add('fade-in');
+        } else {
+            window.location.href = '../index.html';
+        }
     });
 
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', () => {
-        UIService.showConfirm("Log Out", "End your session?", "Log Out", async () => {
-            await AuthService.logout();
-            window.location.href = '../index.html';
-        });
+        UIService.showConfirm(
+            "Log Out & Close Queue?",
+            "Logging out will automatically set the establishment to <b class='text-danger'>CLOSED</b>.<br><br>Are you sure you want to end your session?",
+            "Log Out",
+            async () => {
+                await AdminService.saveStatus('closed');
+                await AuthService.logout();
+                window.location.href = '../index.html';
+            }
+        );
     });
 });
 
@@ -39,7 +52,7 @@ function initializeAdmin() {
     setupTicketOverrideTab();
 }
 
-// ====================== OVERVIEW TAB ======================
+// OVERVIEW TAB
 function setupOverviewTab() {
     // Status buttons
     document.querySelectorAll('input[name="status"]').forEach(radio => {
@@ -48,20 +61,34 @@ function setupOverviewTab() {
         });
     });
 
-    // Max tickets limit
+    // Queue limit
     const limitSwitch = document.getElementById('limitSwitch');
     const maxInput = document.getElementById('maxTicketInput');
     const saveLimitBtn = document.getElementById('saveLimitBtn');
 
-    limitSwitch.addEventListener('change', () => {
+    limitSwitch.addEventListener('change', async () => {
         maxInput.disabled = !limitSwitch.checked;
-        saveLimitBtn.disabled = !limitSwitch.checked;
+
+        if (!limitSwitch.checked) {
+            maxInput.value = '';
+            saveLimitBtn.disabled = true;
+            await AdminService.saveMaxTickets(null);
+            UIService.showModal('info', 'Limit Removed', 'The queue is now accepting UNLIMITED tickets.');
+        } else {
+            saveLimitBtn.disabled = false;
+        }
     });
 
     saveLimitBtn.addEventListener('click', async () => {
-        const max = parseInt(maxInput.value) || null;
-        await AdminService.saveMaxTickets(max);
-        UIService.showModal('success', 'Saved', 'Maximum tickets updated.');
+        if (limitSwitch.checked) {
+            const max = parseInt(maxInput.value);
+            if (!max || max <= 0) {
+                UIService.showModal('error', 'Invalid Input', 'Please enter a valid number greater than 0.');
+                return;
+            }
+            await AdminService.saveMaxTickets(max);
+            UIService.showModal('success', 'Limit Saved', `The queue is now strictly limited to ${max} tickets today.`);
+        }
     });
 
     // Real-time settings
@@ -87,42 +114,108 @@ function setupOverviewTab() {
         document.getElementById('statWaiting').textContent = stats.waiting;
         document.getElementById('statProcessed').textContent = stats.processed;
         document.getElementById('statCancelled').textContent = stats.cancelled || 0;
-        document.getElementById('statNoShow').textContent = stats.noshow || 0;
         document.getElementById('statTotal').textContent = stats.total;
     });
 
-
     // Live Queue Activity Table
     const queueTableBody = document.getElementById('overviewQueueTable');
+    const queuePagination = document.getElementById('queuePagination');
+
+    let activeTicketsData = [];
+    let currentQueuePage = 1;
+    const ticketsPerPage = 10;
+
     AdminService.listenToActiveTickets((tickets) => {
-        queueTableBody.innerHTML = tickets.length === 0 
-            ? `<tr><td colspan="2" class="text-center py-4 text-muted">No active tickets</td></tr>`
-            : tickets.map(t => `
-                <tr>
-                    <td class="ps-4 fw-bold">${t.ticketNumber}</td>
-                    <td><span class="badge ${t.status === 'serving' ? 'bg-success' : 'bg-primary'}">${t.status === 'serving' ? 'Serving' : 'Waiting'}</span></td>
-                </tr>
-            `).join('');
+        activeTicketsData = tickets;
+        renderQueueTable();
     });
 
-    // Per Teller Stats Table
+    function renderQueueTable() {
+        if (activeTicketsData.length === 0) {
+            queueTableBody.innerHTML = `<tr><td colspan="2" class="text-center py-4 text-muted">No active tickets</td></tr>`;
+            if (queuePagination) queuePagination.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.ceil(activeTicketsData.length / ticketsPerPage);
+
+        if (currentQueuePage > totalPages) currentQueuePage = totalPages;
+        if (currentQueuePage < 1) currentQueuePage = 1;
+
+        const startIndex = (currentQueuePage - 1) * ticketsPerPage;
+        const endIndex = startIndex + ticketsPerPage;
+        const paginatedTickets = activeTicketsData.slice(startIndex, endIndex);
+
+        queueTableBody.innerHTML = paginatedTickets.map(t => {
+            const badgeClass = t.status === 'Serving' ? 'bg-success shadow-sm' : 'bg-primary';
+            const prioBadge = t.isPriority || t.isUpgraded ? `<span class="badge bg-warning text-dark border border-warning ms-2" style="font-size: 0.6rem;">PRIO</span>` : '';
+
+            return `
+            <tr>
+                <td class="ps-4 fw-bold">
+                    ${t.ticketNumber} ${prioBadge}
+                </td>
+                <td>
+                    <span class="badge ${badgeClass}">${t.status}</span>
+                    ${t.counterName && t.status === 'Serving' ? `<small class="text-muted d-block mt-1" style="font-size: 0.65rem;">at ${t.counterName}</small>` : ''}
+                </td>
+            </tr>
+            `;
+        }).join('');
+
+        renderPaginationControls(totalPages);
+    }
+
+    function renderPaginationControls(totalPages) {
+        if (!queuePagination) return;
+        if (totalPages <= 1) {
+            queuePagination.innerHTML = '';
+            return;
+        }
+
+        let html = `<nav><ul class="pagination pagination-sm mb-0 shadow-sm justify-content-end">`;
+
+        html += `<li class="page-item ${currentQueuePage === 1 ? 'disabled' : ''}">
+                <button class="page-link text-dark" onclick="changeQueuePage(${currentQueuePage - 1})">Prev</button>
+             </li>`;
+
+        for (let i = 1; i <= totalPages; i++) {
+            const activeClass = currentQueuePage === i ? 'active' : '';
+            html += `<li class="page-item ${activeClass}">
+                    <button class="page-link ${currentQueuePage === i ? 'bg-primary-q border-primary-q text-white' : 'text-dark'}" onclick="changeQueuePage(${i})">${i}</button>
+                 </li>`;
+        }
+
+        html += `<li class="page-item ${currentQueuePage === totalPages ? 'disabled' : ''}">
+                <button class="page-link text-dark" onclick="changeQueuePage(${currentQueuePage + 1})">Next</button>
+             </li>`;
+
+        html += `</ul></nav>`;
+        queuePagination.innerHTML = html;
+    }
+
+    window.changeQueuePage = function (newPage) {
+        currentQueuePage = newPage;
+        renderQueueTable();
+    };
+
+    // Teller Stats Table
     const perTellerTbody = document.getElementById('perTellerTbody');
     AdminService.listenToTellerStats((stats) => {
-        perTellerTbody.innerHTML = stats.length === 0 
-            ? `<tr><td colspan="5" class="text-center py-4 text-muted">No teller data yet</td></tr>`
+        perTellerTbody.innerHTML = stats.length === 0
+            ? `<tr><td colspan="4" class="text-center py-4 text-muted">No Online Teller</td></tr>`
             : stats.map(s => `
                 <tr>
                     <td class="ps-4 fw-bold">${s.name}</td>
                     <td class="text-center">${s.queued}</td>
                     <td class="text-center">${s.processed}</td>
                     <td class="text-center">${s.cancelled}</td>
-                    <td class="text-center">${s.noshow}</td>
                 </tr>
             `).join('');
     });
 }
 
-// ====================== TELLERS TAB ======================
+// TELLERS TAB
 function setupTellersTab() {
     const form = document.getElementById('createTellerForm');
 
@@ -145,10 +238,10 @@ function setupTellersTab() {
 
         try {
             await AdminService.createTeller(name, email, password, counter);
-            UIService.showModal('success', 'Teller Created Successfully!', 
-                `${name} can now log in with <b>${email}</b>.<br><br>Refreshing...`, 
-                () => window.location.reload());
+
+            UIService.showModal('success', 'Teller Created!', `${name} can now log in.`);
             form.reset();
+
         } catch (err) {
             UIService.showModal('error', 'Error', err.message);
         } finally {
@@ -160,7 +253,7 @@ function setupTellersTab() {
     // Live tellers list
     const tbody = document.getElementById('allTellersTable');
     AdminService.listenToTellers((tellers) => {
-        tbody.innerHTML = tellers.length === 0 
+        tbody.innerHTML = tellers.length === 0
             ? `<tr><td colspan="4" class="text-center py-4 text-muted">No tellers yet</td></tr>`
             : tellers.map(t => `
                 <tr>
@@ -178,9 +271,67 @@ function setupTellersTab() {
                 </tr>
             `).join('');
     });
+
+    // Handle the Edit Teller Form Submission
+    const editForm = document.getElementById('editTellerForm');
+    if (editForm) {
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('editTellerId').value;
+            const name = document.getElementById('editName').value.trim();
+            const counter = document.getElementById('editCounter').value.trim();
+
+            const btn = editForm.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                await AdminService.updateTeller(id, name, counter);
+
+                UIService.showModal('success', 'Updated', 'Teller profile updated successfully.');
+                bootstrap.Modal.getInstance(document.getElementById('editTellerModal')).hide();
+                editForm.reset();
+            } catch (err) {
+                UIService.showModal('error', 'Error', err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    }
+
+    // Teller's Reset Password
+    const sendResetEmailBtn = document.getElementById('sendResetEmailBtn');
+    const resetEmailFeedback = document.getElementById('resetEmailFeedback');
+
+    if (sendResetEmailBtn) {
+        sendResetEmailBtn.addEventListener('click', async () => {
+            const email = document.getElementById('editEmail').value;
+            if (!email) return;
+
+            const originalText = sendResetEmailBtn.innerHTML;
+            sendResetEmailBtn.disabled = true;
+            sendResetEmailBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+
+            try {
+                // Email Trigger
+                await AdminService.sendTellerPasswordReset(email);
+
+                sendResetEmailBtn.classList.add('d-none');
+                resetEmailFeedback.classList.remove('d-none');
+
+            } catch (err) {
+                UIService.showModal('error', 'Error', err.message);
+                sendResetEmailBtn.disabled = false;
+                sendResetEmailBtn.innerHTML = originalText;
+            }
+        });
+    }
 }
 
-// ====================== TICKET OVERRIDE TAB ======================
+// TICKET OVERRIDE TAB
 function setupTicketOverrideTab() {
     const searchInput = document.getElementById('searchTicket');
     const findBtn = document.getElementById('findTicketBtn');
@@ -193,7 +344,7 @@ function setupTicketOverrideTab() {
 
     findBtn.addEventListener('click', async () => {
         const ticketNumber = searchInput.value.trim().toUpperCase();
-        if (!ticketNumber) return UIService.showModal('error', 'Missing Ticket', 'Please enter a ticket number');
+        if (!ticketNumber) return UIService.showModal('error', 'Missing Ticket', 'Please enter a ticket number.');
 
         findBtn.disabled = true;
         findBtn.textContent = 'Searching...';
@@ -225,38 +376,25 @@ function setupTicketOverrideTab() {
         resultDiv.classList.add('d-none');
         searchInput.value = '';
     });
-
-    // Cancel button
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn btn-outline-danger btn-sm fw-bold shadow-sm rounded-pill px-3 mt-2';
-    cancelBtn.textContent = 'CANCEL TICKET';
-    cancelBtn.style.display = 'none';
-    resultDiv.appendChild(cancelBtn);
-
-    cancelBtn.addEventListener('click', async () => {
-        if (!currentFoundTicket) return;
-        UIService.showConfirm("Cancel Ticket?", "Are you sure?", "Yes, Cancel", async () => {
-            await AdminService.cancelFoundTicket(currentFoundTicket.id);
-            UIService.showModal('success', 'Cancelled', `Ticket ${currentFoundTicket.ticketNumber} cancelled.`);
-            resultDiv.classList.add('d-none');
-            searchInput.value = '';
-        });
-    });
-
-    // Show cancel button when result appears
-    const observer = new MutationObserver(() => {
-        cancelBtn.style.display = resultDiv.classList.contains('d-none') ? 'none' : 'inline-block';
-    });
-    observer.observe(resultDiv, { attributes: true });
 }
 
-// ====================== GLOBAL FUNCTIONS ======================
+// GLOBAL FUNCTIONS
 window.editTeller = (id, name, email, counter) => {
     const modal = new bootstrap.Modal(document.getElementById('editTellerModal'));
+
     document.getElementById('editTellerId').value = id;
     document.getElementById('editName').value = name;
     document.getElementById('editCounter').value = counter;
     document.getElementById('editEmail').value = email;
+
+    const sendResetEmailBtn = document.getElementById('sendResetEmailBtn');
+    const resetEmailFeedback = document.getElementById('resetEmailFeedback');
+
+    sendResetEmailBtn.classList.remove('d-none');
+    sendResetEmailBtn.disabled = false;
+    sendResetEmailBtn.innerHTML = '<i class="bi bi-envelope-at-fill me-2"></i>SEND RESET EMAIL';
+    resetEmailFeedback.classList.add('d-none');
+
     modal.show();
 };
 

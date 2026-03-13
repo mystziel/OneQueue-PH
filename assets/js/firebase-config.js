@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-const firebaseConfig = {
+export const firebaseConfig = {
     apiKey: "AIzaSyD7_18_n_BC1QIoAYBleWJPpefEKZTz8DY",
     authDomain: "oneq-ph.firebaseapp.com",
     projectId: "oneq-ph",

@@ -1,4 +1,4 @@
-// auth.js
+// assets/js/auth.js
 import { auth, db } from './firebase-config.js';
 import {
     signInWithEmailAndPassword,
@@ -8,28 +8,40 @@ import {
     sendEmailVerification,
     onAuthStateChanged
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, query, collection, where, getDocs } from "firebase/firestore";
 
 export const AuthService = {
 
-    // 1. Login User & Check Verification
+    // Authenticate user
     login: async (email, password) => {
         try {
-            // Attempt to sign in
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // --- CRITICAL STEP: Check Email Verification ---
+            // Enforce verification
             if (!user.emailVerified) {
-                await signOut(auth); // Force them to log out immediately
+                let appendMsg = "";
+
+                try {
+                    await sendEmailVerification(user);
+                    appendMsg = " We have just sent a new verification link to your inbox. Please check your spam folder.";
+                } catch (verifyError) {
+                    if (verifyError.code === 'auth/too-many-requests') {
+                        appendMsg = " Please check your inbox or spam folder for the link we sent recently.";
+                    } else {
+                        appendMsg = " Please verify your email.";
+                    }
+                }
+
+                // Block access
+                await signOut(auth);
                 return {
                     success: false,
                     code: 'auth/email-not-verified',
-                    message: 'Please verify your email address before logging in.'
+                    message: 'Your email is not verified.' + appendMsg
                 };
             }
 
-            // If verified, get their role
             const role = await AuthService.getUserRole(user.uid);
 
             return { success: true, user, role };
@@ -39,28 +51,21 @@ export const AuthService = {
         }
     },
 
-    // 2. Register new Citizen
+    // Register citizen
     register: async (email, password) => {
         try {
-            // Create Auth User
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Create Firestore Profile (Default: Citizen)
             await setDoc(doc(db, "users", user.uid), {
                 email: email,
                 role: 'citizen',
                 createdAt: new Date(),
-                setupComplete: false // Useful flag for later
+                setupComplete: false
             });
 
-            // Send Verification Email immediately
+            // Trigger verification
             await sendEmailVerification(user);
-
-            // Note: We return success here so the UI can show the "Check your email" modal.
-            // The user is technically logged in by Firebase here, but our
-            // 'observeAuth' in index.js should prevent them from accessing
-            // the dashboard because user.emailVerified is false.
             return { success: true, user };
 
         } catch (error) {
@@ -68,7 +73,7 @@ export const AuthService = {
         }
     },
 
-    // 3. Helper: Get User Role from Firestore
+    // Fetch role
     getUserRole: async (uid) => {
         try {
             const docRef = doc(db, "users", uid);
@@ -83,17 +88,35 @@ export const AuthService = {
         }
     },
 
-    // 4. Send Password Reset
+    // Reset password
     resetPassword: async (email) => {
         try {
+            const q = query(collection(db, "users"), where("email", "==", email));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const userData = querySnapshot.docs[0].data();
+
+                // Restrict tellers
+                if (userData.role === 'teller') {
+                    return {
+                        success: false,
+                        code: 'auth/unauthorized',
+                        message: 'Tellers cannot reset their own passwords. Please contact the Administrator.'
+                    };
+                }
+            }
+
+            // Send link
             await sendPasswordResetEmail(auth, email);
             return { success: true };
+
         } catch (error) {
             return { success: false, code: error.code, message: error.message };
         }
     },
 
-    // 5. Logout
+    // End session
     logout: async () => {
         try {
             await signOut(auth);
@@ -103,7 +126,7 @@ export const AuthService = {
         }
     },
 
-    // 6. Auth State Observer
+    // Track auth
     observeAuth: (callback) => {
         onAuthStateChanged(auth, callback);
     }

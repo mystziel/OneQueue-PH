@@ -1,4 +1,4 @@
-//index.js
+// assets/js/index.js
 import { AuthService } from './auth.js';
 import { UIService } from './ui-service.js';
 
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnBackToLoginReg')?.addEventListener('click', () => switchView('login'));
     document.getElementById('btnBackToLoginForgot')?.addEventListener('click', () => switchView('login'));
 
-    // LOGIN
+    // Login
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // REGISTER
+    // Register
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // FORGOT PASSWORD
+    // Forgot Password
     const forgotForm = document.getElementById('forgotForm');
     if (forgotForm) {
         forgotForm.addEventListener('submit', async (e) => {

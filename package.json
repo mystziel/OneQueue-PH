@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview"
   },
+
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mystziel/OneQueue-PH.git"

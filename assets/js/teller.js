@@ -1,240 +1,297 @@
+// assets/js/teller.js
 import { AuthService } from './auth.js';
 import { UIService } from './ui-service.js';
 import { QueueService } from './queue-service.js';
+import { db } from './firebase-config.js';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 
-// --- DOM ELEMENTS ---
-const elements = {
-    loader: document.getElementById('tellerLoader'),
-    content: document.getElementById('tellerContent'),
-
-    // Header Info
-    displayCounter: document.getElementById('displayCounterName'),
-    sidebarCounter: document.getElementById('sidebarCounterName'),
-    breakToggle: document.getElementById('breakToggle'),
-    logoutBtn: document.getElementById('logoutBtn'),
-
-    // Panels
-    idlePanel: document.getElementById('idlePanel'),
-    servingPanel: document.getElementById('servingPanel'),
-
-    // Serving Info
-    currentTicketNum: document.getElementById('currentTicketNum'),
-    currentOwner: document.getElementById('currentOwner'),
-    serveTimer: document.getElementById('serveTimer'),
-
-    // Buttons
-    btnCallNext: document.getElementById('btnCallNext'),
-
-    // Lists
-    waitingList: document.getElementById('waitingList'),
-    waitingCount: document.getElementById('waitingCount'),
-    transferList: document.getElementById('transferList')
-};
-
-// --- STATE ---
 let currentUser = null;
 let currentTicket = null;
 let timerInterval = null;
 let waitingTickets = [];
+let notifiedTickets = new Set();
 
-// --- INITIALIZATION ---
+// Simulated SMS gateway
+const SMSService = {
+    send: (userName, mobile, message) => {
+        const timestamp = new Date().toLocaleTimeString();
+
+        console.log(
+            `%c 📱 SMS OUTGOING [${timestamp}] %c\nTO: ${userName} (${mobile})\nMSG: ${message}`,
+            "background: #007bff; color: white; font-weight: bold; padding: 2px 5px; border-radius: 3px;",
+            "color: #007bff; font-weight: bold;"
+        );
+
+        console.info(`Notification sent to ${userName}`);
+    },
+
+    // Trigger positional alerts
+    processQueueNotifications: (tickets) => {
+        tickets.forEach((t, index) => {
+            const position = index + 1;
+            const mobile = t.userMobile || "No Mobile Provided";
+            const name = t.userName || "Customer";
+
+            let message = "";
+            const notificationKey = `${t.id}_${position}`;
+
+            if (!notifiedTickets.has(notificationKey)) {
+                if (position === 1) {
+                    message = "OneQueue PH: You are NEXT! Please stay near the waiting area.";
+                } else if (position === 5) {
+                    message = "OneQueue PH: You are 5th in line. Please proceed to establishment.";
+                } else if (position === 10) {
+                    message = "OneQueue PH: You are now 10th in line. Your turn is approaching.";
+                }
+
+                if (message) {
+                    SMSService.send(name, mobile, message);
+                    notifiedTickets.add(notificationKey);
+                }
+            }
+        });
+    }
+};
+
+// Sync availability status
+async function updateTellerStatus(uid, status) {
+    try {
+        await updateDoc(doc(db, "users", uid), { tellerStatus: status });
+    } catch (e) {
+        console.error("Status Sync Error:", e);
+    }
+}
+
+// Init auth
 AuthService.observeAuth(async (user) => {
     if (user) {
         const role = await AuthService.getUserRole(user.uid);
-        if (role === 'teller') {
-            currentUser = user;
-            // Fetch Teller Profile (Counter Name)
-            // Assuming user.displayName or a Firestore profile has the counter name
-            // For now, we mock it or fetch it:
-            const counterName = "Counter " + user.email.split('@')[0]; // Simple fallback
+        if (role !== 'teller') return window.location.href = "../index.html";
 
-            initDashboard(counterName);
-        } else {
-            handleUnauthorized();
-        }
+        currentUser = user;
+
+        const userDocSnap = await getDoc(doc(db, "users", user.uid));
+        const userData = userDocSnap.data();
+
+        document.getElementById('displayCounterName').textContent = userData?.counterName || "Counter --";
+        document.getElementById('sidebarCounterName').textContent = userData?.counterName || "Counter --";
+        document.getElementById('sidebarTellerName').textContent = userData?.name || "Teller";
+
+        await updateTellerStatus(user.uid, 'online');
+        initDashboard();
+
+        const loader = document.getElementById('tellerLoader');
+        const content = document.getElementById('tellerContent');
+        loader.classList.add('d-none');
+        content.classList.remove('d-none');
+        content.classList.add('fade-in');
+
     } else {
-        handleUnauthorized();
+        window.location.href = "../index.html";
     }
 });
 
-function initDashboard(counterName) {
-    // 1. Set Counter Name in UI
-    elements.displayCounter.textContent = counterName;
-    elements.sidebarCounter.textContent = counterName;
+// Setup dashboard data
+function initDashboard() {
+    restoreActiveSession(currentUser.email);
 
-    // 2. Hide Loader
-    elements.loader.classList.add('d-none');
-    elements.content.classList.remove('d-none');
-
-    // 3. Start Listening to Queue
     QueueService.listenToWaitingList((tickets) => {
         waitingTickets = tickets;
         renderWaitingList();
+        SMSService.processQueueNotifications(tickets);
     });
-
-    console.log("Teller Dashboard Initialized");
 }
 
-async function handleUnauthorized() {
-    await AuthService.logout();
-    window.location.href = "../index.html";
-}
+// Handle break toggle
+document.getElementById('breakToggle').addEventListener('change', async (e) => {
+    const isBreak = e.target.checked;
+    const btn = document.getElementById('btnCallNext');
+    const label = document.querySelector('label[for="breakToggle"]');
 
-// --- CORE FUNCTIONS ---
+    if (isBreak) {
+        btn.disabled = true;
+        btn.classList.add('opacity-50');
+        label.textContent = "ON BREAK";
+        await updateTellerStatus(currentUser.uid, 'break');
+    } else {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        label.textContent = "TAKE A BREAK";
+        await updateTellerStatus(currentUser.uid, 'online');
+    }
+});
 
-// 1. Call Next Ticket
-elements.btnCallNext.addEventListener('click', async () => {
-    // UI Loading state could go here
-    elements.btnCallNext.disabled = true;
-    elements.btnCallNext.textContent = "Calling...";
+// Call next customer
+document.getElementById('btnCallNext').addEventListener('click', async () => {
+    if (document.getElementById('breakToggle').checked) return;
+
+    const btn = document.getElementById('btnCallNext');
+    btn.disabled = true;
+    btn.textContent = "CALLING...";
 
     try {
-        const ticket = await QueueService.callNextTicket(currentUser.email, elements.displayCounter.textContent);
+        const counter = document.getElementById('displayCounterName').textContent;
+        const ticket = await QueueService.callNextTicket(currentUser.email, counter);
 
         if (ticket) {
             startSession(ticket);
         } else {
-            UIService.showModal('info', 'Queue Empty', 'There are no tickets waiting.');
+            UIService.showModal('info', 'Empty', 'No customers in line.');
         }
     } catch (e) {
-        console.error(e);
         UIService.showModal('error', 'Error', 'Failed to call ticket.');
     } finally {
-        elements.btnCallNext.disabled = false;
-        elements.btnCallNext.innerHTML = '<i class="bi bi-bell-fill me-2"></i>CALL NEXT TICKET';
+        btn.disabled = document.getElementById('breakToggle').checked;
+        btn.innerHTML = '<i class="bi bi-bell-fill me-2"></i>CALL NEXT TICKET';
     }
 });
 
-// 2. Start Serving Session
-function startSession(ticket) {
+// Start active transaction
+function startSession(ticket, isRestore = false) {
     currentTicket = ticket;
+    document.getElementById('currentTicketNum').textContent = ticket.ticketNumber;
+    document.getElementById('currentOwner').textContent = ticket.userName || ticket.ownerName || "Guest";
+    document.getElementById('idlePanel').classList.add('d-none');
+    document.getElementById('servingPanel').classList.remove('d-none');
 
-    // Update UI
-    elements.currentTicketNum.textContent = ticket.ticketNumber || ticket.id;
-    elements.currentOwner.textContent = ticket.ownerName || "Guest";
+    // No-Show reminder
+    let reminderEl = document.getElementById('noShowReminder');
+    if (!reminderEl) {
+        reminderEl = document.createElement('div');
+        reminderEl.id = 'noShowReminder';
+        reminderEl.className = 'text-danger fw-bold opacity-50 d-none mt-1 transition-opacity';
+        reminderEl.style.fontSize = '0.7rem';
+        reminderEl.innerHTML = '<i class="bi bi-info-circle me-1"></i>Eligible for No Show';
+        document.getElementById('serveTimer').parentNode.appendChild(reminderEl);
+    }
 
-    // Switch Panels
-    elements.idlePanel.classList.add('d-none');
-    elements.servingPanel.classList.remove('d-none'); // Show serving panel
-    elements.servingPanel.classList.add('fade-in');
+    reminderEl.classList.add('d-none');
 
-    // Start Timer
-    let seconds = 0;
-    elements.serveTimer.textContent = "00:00";
+    let sec = 0;
+
+    // Calculate elapsed time on refresh
+    if (isRestore && ticket.calledAt) {
+        const calledTime = ticket.calledAt.toMillis ? ticket.calledAt.toMillis() : Date.now();
+        sec = Math.floor((Date.now() - calledTime) / 1000);
+        if (sec < 0) sec = 0;
+    }
+
+    // Unhide reminder immediately if restored session is already past 1 min
+    if (sec >= 60) reminderEl.classList.remove('d-none');
+
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
-        seconds++;
-        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const s = (seconds % 60).toString().padStart(2, '0');
-        elements.serveTimer.textContent = `${m}:${s}`;
+        sec++;
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        document.getElementById('serveTimer').textContent = `${m}:${s}`;
+
+        // Trigger reminder at exactly 60 seconds
+        if (sec === 60) reminderEl.classList.remove('d-none');
     }, 1000);
 }
 
-// 3. End Session (Complete / Cancel)
-// Note: This function is called by the window object because buttons use onclick="handleAction()"
+// Recover interrupted sessions
+async function restoreActiveSession(tellerEmail) {
+    try {
+        const q = query(
+            collection(db, "tickets"),
+            where("status", "==", "Serving"),
+            where("calledBy", "==", tellerEmail)
+        );
+
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+            const ticketDoc = snapshot.docs[0];
+            const ticketData = { id: ticketDoc.id, ...ticketDoc.data() };
+
+            console.log("Active session restored:", ticketData.ticketNumber);
+            startSession(ticketData, true);
+        }
+    } catch (error) {
+        console.error("Error restoring session:", error);
+    }
+}
+
+// Render queue list
+function renderWaitingList() {
+    const list = document.getElementById('waitingList');
+    document.getElementById('waitingCount').textContent = `${waitingTickets.length} Waiting`;
+    list.innerHTML = '';
+
+    if (waitingTickets.length === 0) {
+        list.innerHTML = '<div class="text-center py-5 text-muted">Empty</div>';
+        return;
+    }
+
+    // Limit to top 10
+    const top10 = waitingTickets.slice(0, 10);
+
+    top10.forEach((t, index) => {
+        const isNext = index === 0;
+        const item = document.createElement('div');
+        item.className = `list-group-item py-3 ${isNext ? 'bg-primary-subtle border-start border-primary border-4' : ''}`;
+
+        item.innerHTML = `
+            <div class="d-flex align-items-center w-100">
+                <div>
+                    <h5 class="mb-0 fw-bold">${t.ticketNumber}</h5>
+                    <small class="text-muted">${t.userName}</small>
+                </div>
+                <span class="badge ${isNext ? 'bg-primary' : 'bg-light text-dark border'} rounded-pill ms-auto">
+                    ${isNext ? 'NEXT' : 'POS ' + (index + 1)}
+                </span>
+            </div>`;
+        list.appendChild(item);
+    });
+}
+
+// End or cancel transaction
 window.handleAction = async (action) => {
     if (!currentTicket) return;
+
+    // Prevent double-clicks
+    const btnCallNext = document.getElementById('btnCallNext');
+    btnCallNext.disabled = true;
 
     try {
         if (action === 'complete') {
             await QueueService.completeTicket(currentTicket.id);
-            UIService.showModal('success', 'Success', 'Transaction Completed!');
+            UIService.showModal('success', 'Transaction Complete', `Ticket <b>${currentTicket.ticketNumber}</b> has been processed successfully.`);
         } else {
-            // Cancel / No Show
             await QueueService.cancelTicket(currentTicket.id, action);
+
+            // Format reason text
+            let reasonText = "Cancelled";
+            if (action === 'noshow') reasonText = "Customer No Show";
+            else if (action === 'unavailable') reasonText = "Documents Unavailable";
+            else if (action === 'other') reasonText = "Other Reason";
+
+            UIService.showModal('info', 'Session Ended', `Ticket <b>${currentTicket.ticketNumber}</b> was closed.<br>Reason: <span class="text-danger fw-bold">${reasonText}</span>`);
         }
     } catch (e) {
-        console.error(e);
-        UIService.showModal('error', 'Error', 'Failed to update ticket.');
+        console.error("Action Error:", e);
+        UIService.showModal('error', 'Error', 'Failed to update ticket status. Please check your connection.');
     } finally {
-        resetToIdle();
+        // Idle
+        document.getElementById('servingPanel').classList.add('d-none');
+        document.getElementById('idlePanel').classList.remove('d-none');
+        currentTicket = null;
+        clearInterval(timerInterval);
+
+        btnCallNext.disabled = document.getElementById('breakToggle').checked;
     }
 };
 
-function resetToIdle() {
-    currentTicket = null;
-    clearInterval(timerInterval);
-    elements.servingPanel.classList.add('d-none');
-    elements.idlePanel.classList.remove('d-none');
-    elements.idlePanel.classList.add('fade-in');
-}
-
-// --- RENDER FUNCTIONS ---
-
-function renderWaitingList() {
-    elements.waitingCount.textContent = waitingTickets.length + " Waiting";
-    elements.waitingList.innerHTML = '';
-
-    if (waitingTickets.length === 0) {
-        elements.waitingList.innerHTML = `
-            <div class="text-center py-5 mt-4">
-                <div class="text-muted opacity-25 mb-2"><i class="bi bi-inbox-fill display-4"></i></div>
-                <h6 class="fw-bold text-muted">Queue is Empty</h6>
-                <p class="text-muted small">Relax and wait for new tickets.</p>
-            </div>`;
-        return;
-    }
-
-    waitingTickets.forEach(t => {
-        const item = document.createElement('a');
-        item.href = "#";
-        item.className = "list-group-item list-group-item-action py-3 border-bottom";
-        item.innerHTML = `
-            <div class="d-flex w-100 justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-1 fw-bold text-dark">${t.ticketNumber}</h5>
-                    <small class="text-muted">${t.ownerName || 'Guest'}</small>
-                </div>
-                <small class="text-primary-q fw-bold">WAITING</small>
-            </div>
-        `;
-        elements.waitingList.appendChild(item);
-    });
-}
-
-// --- TRANSFER LOGIC ---
-window.openTransferList = async () => {
-    // 1. Show the modal (Bootstrap handles this via data-bs-target)
-    const modal = new bootstrap.Modal(document.getElementById('transferModal'));
-    modal.show();
-
-    // 2. Load Counters
-    elements.transferList.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm"></div></div>';
-
-    const counters = await QueueService.getActiveCounters();
-
-    elements.transferList.innerHTML = ''; // Clear loader
-    counters.forEach(c => {
-        if (c.name === elements.displayCounter.textContent) return; // Don't show self
-
-        const btn = document.createElement('button');
-        btn.className = "btn btn-outline-secondary py-3 fw-bold rounded-3 text-start px-4 mb-2 w-100";
-        btn.innerHTML = `<i class="bi bi-box-arrow-in-right me-2"></i> ${c.name}`;
-        btn.onclick = () => confirmTransfer(c.name, modal);
-        elements.transferList.appendChild(btn);
-    });
-};
-
-async function confirmTransfer(targetCounter, modalInstance) {
-    if(!currentTicket) return;
-
-    await QueueService.transferTicket(currentTicket.id, targetCounter);
-
-    modalInstance.hide();
-    UIService.showModal('success', 'Transferred', `Ticket transferred to ${targetCounter}`);
-    resetToIdle();
-}
-
-// --- LOGOUT LOGIC ---
-elements.logoutBtn.addEventListener('click', (e) => {
-    e.preventDefault();
+// Handle logout
+document.getElementById('logoutBtn').addEventListener('click', () => {
     UIService.showConfirm(
-        "End Session?",
-        "Are you sure you want to log out?",
-        "LOGOUT",
+        "Log Out?",
+        "Are you sure you want to end your session and go <b class='text-danger'>OFFLINE</b>?",
+        "Log Out",
         async () => {
-            elements.content.classList.add('d-none');
-            elements.loader.classList.remove('d-none');
+            await updateTellerStatus(currentUser.uid, 'offline');
             await AuthService.logout();
             window.location.href = "../index.html";
         }
